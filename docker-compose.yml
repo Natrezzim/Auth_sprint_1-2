@@ -1,0 +1,24 @@
+services:
+  db:
+    container_name: db_postgres
+    image: postgres:14.2
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./src/online_cinema/app/sqlscript/movies_schema.sql:/docker-entrypoint-initdb.d/movies_schema.sql
+    env_file:
+      - ./src/online_cinema/app/config/.env
+
+  redis:
+    container_name: redis
+    build:
+      context: src/redis
+      dockerfile: ./Dockerfile
+    depends_on:
+      - db
+      - es
+      - service
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
