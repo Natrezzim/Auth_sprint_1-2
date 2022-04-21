@@ -1,12 +1,41 @@
 services:
+
+  service:
+    container_name: auth_service
+    build:
+      context: src
+      dockerfile: ./app/Dockerfile
+    environment:
+      - FLASK_APP=src/app/app.py
+    entrypoint: >
+      sh -c "python -m flask db init
+      && sleep 5
+      && python -m flask db migrate 
+      && sleep 5
+      && python -m flask db upgrade
+      && sleep 5
+      && python -m flask run --host 0.0.0.0 --port 80"
+    expose:
+      - "80"
+    ports:
+      - "80:80"
+    env_file:
+      - ./src/app/config/.env
+    depends_on:
+      - db
+      - redis
+
   db:
     container_name: db_postgres
     image: postgres:14.2
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-      - ./src/online_cinema/app/sqlscript/movies_schema.sql:/docker-entrypoint-initdb.d/movies_schema.sql
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
     env_file:
-      - ./src/online_cinema/app/config/.env
+      - ./src/app/config/.env
 
   redis:
     container_name: redis
@@ -15,8 +44,6 @@ services:
       dockerfile: ./Dockerfile
     depends_on:
       - db
-      - es
-      - service
     ports:
       - "6379:6379"
 
