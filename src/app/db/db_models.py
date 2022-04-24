@@ -1,19 +1,21 @@
 import uuid
-
 from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import class_mapper, ColumnProperty
 
 from src.app.db.db import db
 
 
-class UserData(db.Model):
+class Users(db.Model):
     __tablename__ = 'user_data'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    username = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, nullable=False)
 
     def __repr__(self):
-        return f'<UserData {self.login}>'
+        return f'<UserData {self.id}>'
 
 
 class AuthHistory(db.Model):
@@ -25,23 +27,18 @@ class AuthHistory(db.Model):
     auth_date = db.Column(db.TIMESTAMP, nullable=False)
 
     def __repr__(self):
-        return f'<AuthHistory {self.login}>'
+        return f'<AuthHistory {self.id}>'
 
 
 class UserPersonalData(db.Model):
     __tablename__ = 'user_personal_data'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), ForeignKey("user_data.id"), nullable=False)
-    username = db.Column(db.String, nullable=False, unique=True)
+    user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     email = db.Column(db.String, nullable=False, unique=True)
-    phone_number = db.Column(db.String, nullable=False, unique=True)
-    last_name = db.Column(db.String, nullable=False)
-    first_name = db.Column(db.String, nullable=False)
-    middle_name = db.Column(db.String, nullable=True)
 
     def __repr__(self):
-        return f'<UserPersonalData {self.login}>'
+        return f'<UserPersonalData {self.id}>'
 
 
 class Role(db.Model):
@@ -52,7 +49,7 @@ class Role(db.Model):
     description = db.Column(db.String, nullable=True)
 
     def __repr__(self):
-        return f'<Role {self.login}>'
+        return f'<Role {self.id}>'
 
 
 class Permission(db.Model):
@@ -63,7 +60,7 @@ class Permission(db.Model):
     description = db.Column(db.String, nullable=True)
 
     def __repr__(self):
-        return f'<Permission {self.login}>'
+        return f'<Permission {self.id}>'
 
 
 class RolePermission(db.Model):
@@ -74,15 +71,23 @@ class RolePermission(db.Model):
     permission_id = db.Column(UUID(as_uuid=True), ForeignKey("permission.id"), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<RolePermission {self.login}>'
+        return f'<RolePermission {self.id}>'
 
 
 class UserRole(db.Model):
     __tablename__ = 'user_role'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), ForeignKey("user_data.id"), unique=True, nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
     role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=True, nullable=False)
 
     def __repr__(self):
-        return f'<UserRole {self.login}>'
+        return f'<UserRole {self.id}>'
+
+
+class Tokens(db.Model):
+    __tablename__ = 'tokens'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
+    refresh_token = db.Column(db.String, nullable=False)

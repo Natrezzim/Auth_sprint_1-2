@@ -16,8 +16,9 @@ PostgreSQL доступна снаружи для разработки врем�
 
 Таблицы
 -
-#### user_data
+#### users
     id UUID
+    username String
     password String
 #### auth_history
     id UUID
@@ -27,12 +28,7 @@ PostgreSQL доступна снаружи для разработки врем�
 #### user_personal_data  
     id UUID
     user_id UUID
-    username String
     email String
-    phone_number String
-    last_name String
-    first_name String
-    middle_name String
 #### role  
     id UUID
     role_type String
