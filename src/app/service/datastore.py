@@ -24,6 +24,7 @@ def password_encrypt(username: str, password: str):
 def create_jwt_token(username: str, password: str, secret_key: str, expires_delta: datetime.timedelta) -> str:
     """
     Создание jwt token
+
     :param username: имя пользователя
     :param password: пароль
     :param secret_key: подпись токена
@@ -46,6 +47,7 @@ def create_jwt_token(username: str, password: str, secret_key: str, expires_delt
 def create_refresh_token(username: str, password: str, secret_key: str, expires_delta: datetime.timedelta) -> str:
     """
     Создание jwt token
+
     :param username: имя пользователя
     :param password: пароль
     :param secret_key: подпись токена
@@ -72,6 +74,14 @@ class UserDataStore:
 
     @staticmethod
     def authorize_user(username: str, password: str, user_agent: str) -> Users:
+        """
+        Авторизация пользователя
+
+        :param username: имя пользователя
+        :param password: пароль
+        :param user_agent: устройство
+        :return: user_id: id пользователя
+        """
         password = password_encrypt(username, password)
         user = Users.query.filter_by(username=username, password=password).one_or_none()
         if user is not None:
@@ -83,6 +93,14 @@ class UserDataStore:
 
     @staticmethod
     def register_user(username: str, password: str, email: str):
+        """
+        Регистрация пользователя
+
+        :param username: имя пользователя
+        :param password: пароль
+        :param email: E-mail
+        :return: user_id: id нового пользователя
+        """
         new_user_id = uuid.uuid4()
         password = password_encrypt(username, password)
         new_user = Users(id=new_user_id, username=username, password=password)
@@ -97,6 +115,14 @@ class UserDataStore:
 
     @staticmethod
     def change_user(user_id: uuid.UUID, new_username: str, new_password: str):
+        """
+        Смена логина и пароля пользователя
+
+        :param user_id: id пользователя
+        :param username: имя пользователя
+        :param password: пароль
+        :return: user_id: None
+        """
         user = Users.query.filter_by(id=user_id).one_or_none()
         password = password_encrypt(new_username, new_password)
         if user is not None:
@@ -109,6 +135,7 @@ class UserDataStore:
     def create_jwt_token(user_id: str, username: str, password: str, secret_key: str, expires_delta: datetime.timedelta) -> str:
         """
         Создание jwt token
+
         :param user_id:
         :param username: имя пользователя
         :param password: пароль
@@ -136,6 +163,7 @@ class UserDataStore:
                              user_id) -> str:
         """
         Создание refresh token
+
         :param user_id:
         :param username: имя пользователя
         :param password: пароль
@@ -162,6 +190,7 @@ class UserDataStore:
     def get_user_data_from_token(token: str, secret_key: str):
         """
         Получаем информацию о пользователе из jwt токена
+
         :param token:
         :param secret_key:
         :return:
@@ -173,6 +202,7 @@ class UserDataStore:
     def save_refresh_token(refresh_token: str, user_id):
         """
         Сохраняет refresh token в БД
+
         :param refresh_token:
         :param user_id:
         :return:
@@ -186,6 +216,7 @@ class UserDataStore:
     def delete_refresh_token(refresh_token: str):
         """
         Сохраняет refresh token в БД
+
         :param refresh_token:
         :param user_id:
         :return:
