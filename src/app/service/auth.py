@@ -1,5 +1,7 @@
 import datetime
+import json
 import os
+import uuid
 from http import HTTPStatus
 
 from flask import Blueprint, jsonify, redirect
@@ -10,7 +12,6 @@ from src.app.db.db_models import Tokens, Users
 from .datastore import UserDataStore
 
 auth = Blueprint('auth', __name__)
-
 
 EXPIRE_JWT = datetime.timedelta(days=14)
 EXPIRE_ACCESS = datetime.timedelta(hours=2)
@@ -40,9 +41,11 @@ class RegistrationAPI(Resource):
                                                       password=body["password"],
                                                       email=body["email"])
             # генерируем access и refresh токены
-            access_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"], password=body["password"],
+            access_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"],
+                                                          password=body["password"],
                                                           secret_key=new_user_id, expires_delta=EXPIRE_JWT)
-            refresh_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"], password=body["password"],
+            refresh_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"],
+                                                           password=body["password"],
                                                            secret_key=new_user_id, expires_delta=EXPIRE_ACCESS)
             # заливаем refresh токен в БД
             UserDataStore.save_refresh_token(refresh_token=refresh_token, user_id=new_user_id)
@@ -106,9 +109,49 @@ class RefreshAPI(Resource):
         return {"token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
 
 
+class RolesAPI(Resource):
+    """
+       логика работы метода api/auth/roles
+       """
+    parser = reqparse.RequestParser()
+    parser.add_argument('id', type=uuid.uuid4(), required=False, help="id")
+    parser.add_argument('role', type=str, required=False, help="role")
+    parser.add_argument('description', type=str, required=False, help="description")
+
+    @staticmethod
+    def get():
+        return jsonify(UserDataStore.get_all_roles())
+
+    @staticmethod
+    def post():
+        body = request.get_json()
+        try:
+            return jsonify({'message': 'Role Created'}, UserDataStore.create_role(body.get("role"), body.get("description")))
+        except Exception as e:
+            return str(e)
+
+    @staticmethod
+    def put():
+        body = request.get_json()
+        try:
+            UserDataStore.update_role(body.get("id"), body.get("role"), body.get("description"))
+            return {'message': 'Role Updated'}
+        except Exception as e:
+            return str(e)
+
+    @staticmethod
+    def delete():
+        body = request.get_json()
+        try:
+            UserDataStore.delete_role(body.get("id"))
+            return {'message': 'Role Deleted'}
+        except Exception as e:
+            return str(e)
 
 
-# class RefreshAPI(Resource):
+
+
+            # class RefreshAPI(Resource):
 #
 #     def post(self, access_token: str, refresh_token: str):
 #         try:
@@ -138,6 +181,3 @@ class RefreshAPI(Resource):
 #                 assert access_token == exp_access_token
 #             except AssertionError:
 #                 return {"error": {"message": }}
-
-
-
