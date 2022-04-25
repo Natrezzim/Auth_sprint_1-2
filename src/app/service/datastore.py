@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from src.app.db.db import db, session_scope
 from src.app.db.db_models import AuthHistory, Tokens, UserPersonalData, Users
+from sqlalchemy import update, delete, insert
 
 
 def password_encrypt(username: str, password: str):
@@ -98,15 +99,15 @@ class UserDataStore:
         current_time = datetime.datetime.now()
         expiries_time = current_time + expires_delta
         payload = {
-            "user_id": user_id,
-            "username": username,
-            "password": password,
-            "expires": expiries_time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "user_id": str(user_id),
+            "username": str(username),
+            "password": str(password),
+            "expires": str(expiries_time.strftime("%Y-%m-%dT%H:%M:%S")),
             "type": "access"
         }
         token = jwt.encode(
             payload=payload,
-            key=secret_key
+            key=str(secret_key)
         )
         return token
 
@@ -126,15 +127,15 @@ class UserDataStore:
         current_time = datetime.datetime.now()
         expiries_time = current_time + expires_delta
         payload = {
-            "user_id": user_id,
-            "username": username,
-            "password": password,
-            "expires": expiries_time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "user_id": str(user_id),
+            "username": str(username),
+            "password": str(password),
+            "expires": str(expiries_time.strftime("%Y-%m-%dT%H:%M:%S")),
             "type": "refresh"
         }
         token = jwt.encode(
             payload=payload,
-            key=secret_key
+            key=str(secret_key)
         )
         return token
 
@@ -154,26 +155,78 @@ class UserDataStore:
     def save_refresh_token(refresh_token: str, user_id):
         """
         Сохраняет refresh token в БД
-
         :param refresh_token:
         :param user_id:
         :return:
         """
-        token_info = Tokens(id=uuid.uuid4(), user_id=user_id, refresh_token=refresh_token)
-        with session_scope():
-            db.session.add(token_info)
-            db.session.commit()
+        current_refresh = Tokens.query.filter_by(user_id=user_id).one_or_none()
+        if current_refresh is None:
+            data = Tokens(id=uuid.uuid4(), user_id=user_id, refresh_token=refresh_token)
+            with session_scope():
+                db.session.add(data)
+                db.session.commit()
+
+        else:
+            stmt = update(Tokens).where(Tokens.user_id == user_id).values(refresh_token=refresh_token). \
+                execution_options(synchronize_session="fetch")
+            with session_scope():
+                db.session.execute(stmt)
+                db.session.commit()
+
+    @staticmethod
+    def get_refresh_token(user_id):
+        token_info = Tokens.query.filter_by(user_id=user_id).one_or_none()
+        if token_info is not None:
+            return token_info.refresh_token
+
 
     @staticmethod
     def delete_refresh_token(refresh_token: str):
         """
-        Сохраняет refresh token в БД
-
+        Удаляет refresh token в БД
         :param refresh_token:
+        :return:
+        """
+        with session_scope():
+            stmt = delete(Tokens).where(Tokens.refresh_token == refresh_token)
+            db.session.execute(stmt)
+            db.session.commit()
+
+    @staticmethod
+    def get_user_history_auth(user_id: str):
+        """
+        Получить историю входов в акккаунт пользователя
         :param user_id:
         :return:
         """
-        token_info = Tokens.query.filter_by(refresh_token=refresh_token)
+        history_auth = AuthHistory.query.filter(AuthHistory.user_id == user_id).all()
+
+        return [row._as_dict() for row in history_auth]
+
+    @staticmethod
+    def change_login_user(user_id: str, new_username: str):
+        """
+        Изменить login пользователя
+        :param new_username:
+        :param user_id:
+        :return:
+        """
+        stmt = update(Users).where(Users.user_id == user_id).values(username=new_login). \
+            execution_options(synchronize_session="fetch")
         with session_scope():
-            db.session.remove(token_info)
+            db.session.execute(stmt)
+            db.session.commit()
+
+    @staticmethod
+    def change_password_user(user_id: str, new_password: str):
+        """
+        Изменить password пользователя
+        :param new_password:
+        :param user_id:
+        :return:
+        """
+        stmt = update(Users).where(Users.user_id == user_id).values(password=new_password). \
+            execution_options(synchronize_session="fetch")
+        with session_scope():
+            db.session.execute(stmt)
             db.session.commit()

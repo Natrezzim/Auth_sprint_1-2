@@ -11,8 +11,9 @@ from .datastore import UserDataStore
 
 auth = Blueprint('auth', __name__)
 
-EXPIRE_JWT = datetime.timedelta(days=14)
-EXPIRE_ACCESS = datetime.timedelta(hours=2)
+
+EXPIRE_REFRESH = datetime.timedelta(days=int(os.getenv('REFRESH_TOKEN_EXPIRED')))
+EXPIRE_ACCESS = datetime.timedelta(hours=int(os.getenv('ACCESS_TOKEN_EXPIRED')))
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 
 
@@ -38,17 +39,7 @@ class RegistrationAPI(Resource):
             new_user_id = UserDataStore.register_user(username=body["username"],
                                                       password=body["password"],
                                                       email=body["email"])
-            # генерируем access и refresh токены
-            access_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"],
-                                                          password=body["password"],
-                                                          secret_key=new_user_id, expires_delta=EXPIRE_JWT)
-            refresh_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"],
-                                                           password=body["password"],
-                                                           secret_key=new_user_id, expires_delta=EXPIRE_ACCESS)
-            # заливаем refresh токен в БД
-            UserDataStore.save_refresh_token(refresh_token=refresh_token, user_id=new_user_id)
-            return {"token": str(access_token), "refresh_token": str(refresh_token),
-                    "message": "Create new user success"}, HTTPStatus.OK
+            return {"message": "Create new user success"}, HTTPStatus.OK
 
 
 class LoginApi(Resource):
@@ -70,72 +61,93 @@ class LoginApi(Resource):
                 "message": "Email or password invalid"}}, HTTPStatus.UNAUTHORIZED
         # генерируем access и refresh токены
         access_token = UserDataStore.create_jwt_token(
-            username=body["username"], password=body["password"], user_id=user_id, expires_delta=EXPIRE_JWT,
-            secret_key=SECRET_KEY)
-        refresh_token = UserDataStore.create_refresh_token(
             username=body["username"], password=body["password"], user_id=user_id, expires_delta=EXPIRE_ACCESS,
             secret_key=SECRET_KEY)
+        refresh_token = UserDataStore.create_refresh_token(
+            username=body["username"], password=body["password"], user_id=user_id, expires_delta=EXPIRE_REFRESH,
+            secret_key=SECRET_KEY)
+        # Проверяем наличие refresh токена в БД
+        current_refresh = UserDataStore.get_refresh_token(user_id=user_id)
+        if current_refresh:
+            return {"message": "User is authorized"}
         # заливаем refresh токен в БД
-        """"""
-        return {"token": access_token, "refresh_token": refresh_token, "message": "Login success"}, HTTPStatus.OK
+        UserDataStore.save_refresh_token(refresh_token=refresh_token, user_id=user_id)
+        return {"access_token": access_token, "refresh_token": refresh_token, "message": "Login success"}, HTTPStatus.OK
 
 
 class RefreshAPI(Resource):
 
+    parser = reqparse.RequestParser()
+    parser.add_argument('access_token', type=str, required=True, help="access_token")
+    parser.add_argument('refresh_token', type=str, required=True, help="refresh_token")
+
     @staticmethod
-    def post(access_token: str, refresh_token: str):
+    def post():
+        body = request.get_json()
         # Проверка Наличия refresh токена в БД
-        refresh = Tokens.query.filter_by(refresh_token=refresh_token).one_or_none()
+        refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
         if refresh is None:
             return {"message": "Refresh token not valid"}, HTTPStatus.UNAUTHORIZED
         # Проверка "свежести" refresh токена
-        refresh_data = UserDataStore.get_user_data_from_token(token=refresh_token, secret_key=SECRET_KEY)
+        refresh_data = UserDataStore.get_user_data_from_token(token=body['refresh_token'], secret_key=SECRET_KEY)
         current_time = datetime.datetime.now()
         refresh_expire_time = datetime.datetime.strptime(refresh_data["expires"], "%Y-%m-%dT%H:%M:%S")
         if current_time > refresh_expire_time:
-            UserDataStore.delete_refresh_token(refresh_token)
+            UserDataStore.delete_refresh_token(body['refresh_token'])
             return {"message": "refresh_token expired"}, HTTPStatus.UNAUTHORIZED
         # проверка access токена
-        access_data = UserDataStore.get_user_data_from_token(token=refresh_token, secret_key=SECRET_KEY)
+        access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
         user = Users.query.filter_by(id=access_data["user_id"]).one_or_none()
         if user is None:
             return {"message": "Access token not valid"}, HTTPStatus.UNAUTHORIZED
         # генерация новго access токена
         new_access_token = UserDataStore.create_jwt_token(
             username=access_data["username"], password=access_data["password"], user_id=access_data["user_id"],
-            expires_delta=EXPIRE_JWT, secret_key=SECRET_KEY)
-        return {"token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
+            expires_delta=EXPIRE_ACCESS, secret_key=SECRET_KEY)
+        return {"token": new_access_token, "refresh_token": body['refresh_token']}, HTTPStatus.OK
 
 
+class LogoutAPI(Resource):
+
+    parser = reqparse.RequestParser()
+    parser.add_argument('refresh_token', type=str, required=True, help="refresh_token")
+
+    def post(self):
+        body = request.get_json()
+        refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
+        if refresh is None:
+            return {"message": "Refresh token not valid"}, HTTPStatus.UNAUTHORIZED
+        UserDataStore.delete_refresh_token(refresh.refresh_token)
+        return HTTPStatus.NO_CONTENT
 
 
-        # class RefreshAPI(Resource):
-#
-#     def post(self, access_token: str, refresh_token: str):
-#         try:
-#             # Проверка валидности access / refresh токена
-#             access_data = UserDataStore.get_user_data_from_token(token=access_token, secret_key=SECRET_KEY)
-#             refresh_data = UserDataStore.get_user_data_from_token(token=refresh_token, secret_key=SECRET_KEY)
-#             access_user = Users.query.filter_by(id=access_data['id']).one_or_none()
-#             refresh_user = Users.query.filter_by(id=refresh_data['id']).one_or_none()
-#             if access_user is None or refresh_user is None:
-#                 return {"error": {"message": "Invalid access token or refresh token"}}, HTTPStatus.CONFLICT
-#             # Проверка "свежести" refresh токена
-#             current_time = datetime.datetime.now()
-#             refresh_expire_time = datetime.datetime.strptime(refresh_user["expires"], "%Y-%m-%dT%H:%M:%S")
-#             if current_time > refresh_expire_time:
-#                 # удалить refresh токен из БД
-#                 """"""
-#                 return redirect('/api/v1/login', code=303)
-#             # Проверка свежести
-#
-#             # получаем access токен из редис
-#             exp_access_token = '' # redis.get(user_data[user_id])
-#             if exp_access_token is None:
-#                 new_access_token = UserDataStore.create_jwt_token(
-#                     username=user_data["username"], password=user_data["password"], user_id=user_data["user_id"],
-#                     expires_delta=EXPIRE_JWT, secret_key=SECRET_KEY)
-#             try:
-#                 assert access_token == exp_access_token
-#             except AssertionError:
-#                 return {"error": {"message": }}
+class HistoryAuthAPI(Resource):
+
+    parser = reqparse.RequestParser()
+    parser.add_argument('access_token', type=str, required=True, help="access_token")
+
+    def post(self):
+        body = request.get_json()
+        access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
+        history_auth = UserDataStore.get_user_history_auth(user_id=access_data['user_id'])
+        return {"history": str(history_auth)}
+
+
+class ChangeAuthDataAPI(Resource):
+
+    parser = reqparse.RequestParser()
+    parser.add_argument('new_username', type=str, help="login")
+    parser.add_argument('new_password', type=str, help="password")
+    parser.add_argument('access_token', type=str, required=True, help="access_token")
+
+    def post(self):
+        body = request.get_json()
+        access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
+        if body.get("new_username", None) is not None:
+            UserDataStore.change_login_user(user_id=access_data["user_id"], new_username=body["new_username"])
+        if body.get("new_password", None) is not None:
+            UserDataStore.change_password_user(user_id=access_data["user_id"], new_password=body["new_password"])
+        else:
+            return {"messaage": "Expected Login or Password for changed"}, HTTPStatus.BAD_REQUEST
+
+        return HTTPStatus.NO_CONTENT

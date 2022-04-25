@@ -19,6 +19,12 @@ class Users(db.Model):
     username = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
 
+    def _as_dict(self):
+        return {
+            "username": self.username,
+            "password": self.password
+        }
+
     def __repr__(self):
         return f'<Users {self.id}>'
 
@@ -35,6 +41,13 @@ class AuthHistory(db.Model):
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     user_agent = db.Column(db.String, nullable=False)
     auth_date = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), nullable=False)
+
+    def _as_dict(self):
+        return {
+            "user_id": self.user_id,
+            "user_agent": self.user_agent,
+            "date": self.auth_date
+        }
 
     def __repr__(self):
         return f'<AuthHistory {self.id}>'
@@ -130,3 +143,12 @@ class Tokens(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
     refresh_token = db.Column(db.String, nullable=False)
+
+    def _as_dict(self):
+        return {
+            "user_id": self.user_id,
+            "refresh_token": self.refresh_token
+        }
+
+    def __iter__(self):
+        return iter(self.data)
