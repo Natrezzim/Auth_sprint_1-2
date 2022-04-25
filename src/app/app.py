@@ -10,10 +10,9 @@ from src.app.db.db import init_db
 from src.app.db.db_models import db
 from src.app.service.auth import auth
 
-from .service.routes import initialize_routes
+from src.app.service.routes import initialize_routes
 
 load_dotenv(f'{os.getcwd()}/.env')
-
 
 app = Flask(__name__)
 

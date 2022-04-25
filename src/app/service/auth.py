@@ -1,13 +1,13 @@
 import datetime
 import os
-
-from flask import Blueprint, redirect
-from flask import jsonify
-from flask_restful import Resource, reqparse, request
-from .datastore import UserDataStore
-from src.app.db.db_models import Users, Tokens
-
 from http import HTTPStatus
+
+from flask import Blueprint, jsonify, redirect
+from flask_restful import Resource, reqparse, request
+
+from src.app.db.db_models import Tokens, Users
+
+from .datastore import UserDataStore
 
 auth = Blueprint('auth', __name__)
 
@@ -26,7 +26,8 @@ class RegistrationAPI(Resource):
     parser.add_argument('email', type=str, required=True, help="email")
     parser.add_argument('password', type=str, required=True, help="password")
 
-    def post(self):
+    @staticmethod
+    def post():
         body = request.get_json()
         # проверяем, что такого пользователя нет в БД
         check_user = Users.query.filter_by(username=body['username']).one_or_none()
@@ -39,9 +40,9 @@ class RegistrationAPI(Resource):
                                                       password=body["password"],
                                                       email=body["email"])
             # генерируем access и refresh токены
-            access_token = UserDataStore.create_jwt_token(username=body["username"], password=body["password"],
+            access_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"], password=body["password"],
                                                           secret_key=new_user_id, expires_delta=EXPIRE_JWT)
-            refresh_token = UserDataStore.create_jwt_token(username=body["username"], password=body["password"],
+            refresh_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"], password=body["password"],
                                                            secret_key=new_user_id, expires_delta=EXPIRE_ACCESS)
             # заливаем refresh токен в БД
             UserDataStore.save_refresh_token(refresh_token=refresh_token, user_id=new_user_id)
@@ -54,10 +55,11 @@ class LoginApi(Resource):
     логика работы метода api/auth/login
     """
     parser = reqparse.RequestParser()
-    parser.add_argument('email', type=str, required=True, help="email")
+    parser.add_argument('username', type=str, required=True, help="username")
     parser.add_argument('password', type=str, required=True, help="password")
 
-    def post(self):
+    @staticmethod
+    def post():
         body = request.get_json()
         # проверяем авторизационные данные
         user_id = UserDataStore.authorize_user(username=body.get('username'), password=body.get('password'),
@@ -79,7 +81,8 @@ class LoginApi(Resource):
 
 class RefreshAPI(Resource):
 
-    def post(self, access_token: str, refresh_token: str):
+    @staticmethod
+    def post(access_token: str, refresh_token: str):
         # Проверка Наличия refresh токена в БД
         refresh = Tokens.query.filter_by(refresh_token=refresh_token).one_or_none()
         if refresh is None:
