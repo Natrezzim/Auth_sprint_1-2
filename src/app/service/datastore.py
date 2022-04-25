@@ -1,16 +1,11 @@
-import os
+import datetime
 import uuid
-import jwt
 
-from dotenv import load_dotenv
+import jwt
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from src.app.db.db import db, session_scope
-from src.app.db.db_models import Users, UserPersonalData, AuthHistory, Tokens
-import datetime
-
-
-load_dotenv("../app/config/.env")
+from src.app.db.db_models import AuthHistory, Tokens, UserPersonalData, Users
 
 
 def password_encrypt(username: str, password: str):
@@ -21,59 +16,10 @@ def password_encrypt(username: str, password: str):
     return password
 
 
-def create_jwt_token(username: str, password: str, secret_key: str, expires_delta: datetime.timedelta) -> str:
-    """
-    Создание jwt token
-
-    :param username: имя пользователя
-    :param password: пароль
-    :param secret_key: подпись токена
-    :param expires_delta: время действия токена
-    :return:
-    """
-    payload = {
-        "username": username,
-        "password": password,
-        "expires": expires_delta.total_seconds(),
-        "type": "access"
-    }
-    token = jwt.encode(
-        payload=payload,
-        key=secret_key
-    )
-    return token
-
-
-def create_refresh_token(username: str, password: str, secret_key: str, expires_delta: datetime.timedelta) -> str:
-    """
-    Создание jwt token
-
-    :param username: имя пользователя
-    :param password: пароль
-    :param secret_key: подпись токена
-    :param expires_delta: время действия токена
-    :return:
-    """
-    payload = {
-        "username": username,
-        "password": password,
-        "expires": expires_delta.total_seconds(),
-        "type": "refresh"
-    }
-    token = jwt.encode(
-        payload=payload,
-        key=secret_key
-    )
-    return token
-
-
 class UserDataStore:
 
-    def __init__(self, user: Users):
-        self.user = user
-
     @staticmethod
-    def authorize_user(username: str, password: str, user_agent: str) -> Users:
+    def authorize_user(username: str, password: str, user_agent: str):
         """
         Авторизация пользователя
 
@@ -88,8 +34,8 @@ class UserDataStore:
             auth_history = AuthHistory(id=uuid.uuid4(), user_id=user.id, user_agent=user_agent)
             with session_scope():
                 db.session.add(auth_history)
-                db.session.commit()
-            return user.id
+            user_id = str(user.id)
+            return user_id
 
     @staticmethod
     def register_user(username: str, password: str, email: str):
@@ -109,12 +55,14 @@ class UserDataStore:
             db.session.add(new_user)
             db.session.commit()
             db.session.add(new_user_data)
-            db.session.commit()
         new_created_user = Users.query.filter_by(id=new_user_id).one_or_none()
-        return new_created_user.id
+        if new_created_user is not None:
+            new_id = str(new_created_user.id)
+            return new_id
+        return None
 
     @staticmethod
-    def change_user(user_id: uuid.UUID, new_username: str, new_password: str):
+    def change_user(user_id, new_username: str, new_password: str):
         """
         Смена логина и пароля пользователя
 
@@ -132,7 +80,8 @@ class UserDataStore:
         return None
 
     @staticmethod
-    def create_jwt_token(user_id: str, username: str, password: str, secret_key: str, expires_delta: datetime.timedelta) -> str:
+    def create_jwt_token(user_id: uuid.UUID, username: str, password: str, secret_key: str,
+                         expires_delta: datetime.timedelta) -> str:
         """
         Создание jwt token
 

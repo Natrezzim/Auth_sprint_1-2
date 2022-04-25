@@ -7,24 +7,23 @@ from src.app.db.db import db
 
 
 class Users(db.Model):
-    __tablename__ = 'user_data'
+    __tablename__ = 'users'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     username = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
-    email = db.Column(db.String, nullable=False)
 
     def __repr__(self):
-        return f'<UserData {self.id}>'
+        return f'<Users {self.id}>'
 
 
 class AuthHistory(db.Model):
     __tablename__ = 'auth_history'
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), ForeignKey("user_data.id"), nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     user_agent = db.Column(db.String, nullable=False)
-    auth_date = db.Column(db.TIMESTAMP, nullable=False)
+    auth_date = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), nullable=False)
 
     def __repr__(self):
         return f'<AuthHistory {self.id}>'
