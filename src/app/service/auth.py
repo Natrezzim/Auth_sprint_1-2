@@ -2,7 +2,7 @@ import datetime
 import os
 from http import HTTPStatus
 
-from flask import Blueprint, jsonify, redirect
+from flask import Blueprint
 from flask_restful import Resource, reqparse, request
 
 from src.app.db.db_models import Tokens, Users
@@ -10,7 +10,6 @@ from src.app.db.db_models import Tokens, Users
 from .datastore import UserDataStore
 
 auth = Blueprint('auth', __name__)
-
 
 EXPIRE_JWT = datetime.timedelta(days=14)
 EXPIRE_ACCESS = datetime.timedelta(hours=2)
@@ -40,9 +39,11 @@ class RegistrationAPI(Resource):
                                                       password=body["password"],
                                                       email=body["email"])
             # генерируем access и refresh токены
-            access_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"], password=body["password"],
+            access_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"],
+                                                          password=body["password"],
                                                           secret_key=new_user_id, expires_delta=EXPIRE_JWT)
-            refresh_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"], password=body["password"],
+            refresh_token = UserDataStore.create_jwt_token(user_id=new_user_id, username=body["username"],
+                                                           password=body["password"],
                                                            secret_key=new_user_id, expires_delta=EXPIRE_ACCESS)
             # заливаем refresh токен в БД
             UserDataStore.save_refresh_token(refresh_token=refresh_token, user_id=new_user_id)
@@ -108,7 +109,7 @@ class RefreshAPI(Resource):
 
 
 
-# class RefreshAPI(Resource):
+        # class RefreshAPI(Resource):
 #
 #     def post(self, access_token: str, refresh_token: str):
 #         try:
@@ -138,6 +139,3 @@ class RefreshAPI(Resource):
 #                 assert access_token == exp_access_token
 #             except AssertionError:
 #                 return {"error": {"message": }}
-
-
-

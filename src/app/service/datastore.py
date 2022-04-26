@@ -79,6 +79,9 @@ class UserDataStore:
             return user.id
         return None
 
+
+
+
     @staticmethod
     def create_jwt_token(user_id: uuid.UUID, username: str, password: str, secret_key: str,
                          expires_delta: datetime.timedelta) -> str:

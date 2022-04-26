@@ -1,7 +1,8 @@
-import requests
-import json
-import jwt
 import datetime
+import json
+
+import jwt
+import requests
 
 # registr = {
 #     "username": "test_user",
