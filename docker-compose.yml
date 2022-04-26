@@ -38,3 +38,12 @@ services:
 
 volumes:
   postgres_data:
+
+
+
+#      && sleep 5
+#      && python -m flask db migrate
+#      && sleep 5
+#      && python -m flask db upgrade
+#      && sleep 5
+#      && "
