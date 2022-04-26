@@ -1,7 +1,7 @@
 import uuid
 
-from flask import Blueprint, jsonify
-from flask_restful import Resource, reqparse, request
+from flask import Blueprint, jsonify, request
+from flask_restx import reqparse, Resource
 
 from src.app.service.roles_datastore import RolesCRUD
 
