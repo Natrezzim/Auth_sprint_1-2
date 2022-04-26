@@ -98,8 +98,8 @@ class RolePermission(db.Model):
     permission_id: uuid.uuid4()
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=True, nullable=False)
-    permission_id = db.Column(UUID(as_uuid=True), ForeignKey("permission.id"), unique=True, nullable=False)
+    role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=False, nullable=False)
+    permission_id = db.Column(UUID(as_uuid=True), ForeignKey("permission.id"), unique=False, nullable=False)
 
     def __repr__(self):
         return f'<RolePermission {self.id}>'
@@ -114,7 +114,7 @@ class UserRole(db.Model):
     role_id: uuid.uuid4()
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=False, nullable=False)
     role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=True, nullable=False)
 
     def __repr__(self):

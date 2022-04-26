@@ -10,6 +10,7 @@ from flask_restful import Resource, reqparse, request
 from src.app.db.db_models import Tokens, Users
 
 from .datastore import UserDataStore
+from .roles_datastore import RolesCRUD
 
 auth = Blueprint('auth', __name__)
 
@@ -109,49 +110,9 @@ class RefreshAPI(Resource):
         return {"token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
 
 
-class RolesAPI(Resource):
-    """
-       логика работы метода api/auth/roles
-       """
-    parser = reqparse.RequestParser()
-    parser.add_argument('id', type=uuid.uuid4(), required=False, help="id")
-    parser.add_argument('role', type=str, required=False, help="role")
-    parser.add_argument('description', type=str, required=False, help="description")
-
-    @staticmethod
-    def get():
-        return jsonify(UserDataStore.get_all_roles())
-
-    @staticmethod
-    def post():
-        body = request.get_json()
-        try:
-            return jsonify({'message': 'Role Created'}, UserDataStore.create_role(body.get("role"), body.get("description")))
-        except Exception as e:
-            return str(e)
-
-    @staticmethod
-    def put():
-        body = request.get_json()
-        try:
-            UserDataStore.update_role(body.get("id"), body.get("role"), body.get("description"))
-            return {'message': 'Role Updated'}
-        except Exception as e:
-            return str(e)
-
-    @staticmethod
-    def delete():
-        body = request.get_json()
-        try:
-            UserDataStore.delete_role(body.get("id"))
-            return {'message': 'Role Deleted'}
-        except Exception as e:
-            return str(e)
 
 
-
-
-            # class RefreshAPI(Resource):
+        # class RefreshAPI(Resource):
 #
 #     def post(self, access_token: str, refresh_token: str):
 #         try:

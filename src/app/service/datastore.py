@@ -6,7 +6,7 @@ import jwt
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from src.app.db.db import db, session_scope
-from src.app.db.db_models import AuthHistory, Tokens, UserPersonalData, Users, Role
+from src.app.db.db_models import AuthHistory, Tokens, UserPersonalData, Users, Role, UserRole, Permission, RolePermission
 
 
 def password_encrypt(username: str, password: str):
@@ -80,33 +80,7 @@ class UserDataStore:
             return user.id
         return None
 
-    @staticmethod
-    def get_all_roles():
-        roles = Role.query.all()
-        return roles
 
-    @staticmethod
-    def create_role(role: str, description: Optional[str]):
-        new_role = Role(id=uuid.uuid4(), role_type=role, description=description)
-        with session_scope():
-            db.session.add(new_role)
-        return new_role
-
-    @staticmethod
-    def update_role(role_id: uuid.uuid4(), role: str, description: Optional[str]):
-        if not description:
-            with session_scope():
-                Role.query.filter_by(id=role_id).update(
-                    {'role_type': role})
-        else:
-            with session_scope():
-                Role.query.filter_by(id=role_id).update(
-                    {'role_type': role, 'description': description})
-
-    @staticmethod
-    def delete_role(role_id: uuid.uuid4()):
-        with session_scope():
-            Role.query.filter_by(id=role_id).delete()
 
 
     @staticmethod
