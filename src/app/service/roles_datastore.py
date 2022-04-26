@@ -2,7 +2,7 @@ import uuid
 from typing import Optional
 
 from src.app.db.db import db, session_scope
-from src.app.db.db_models import Role, UserRole, Permission, RolePermission
+from src.app.db.db_models import Permission, Role, RolePermission, UserRole
 
 
 class RolesCRUD:

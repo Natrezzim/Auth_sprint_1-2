@@ -1,16 +1,13 @@
 import datetime
-import json
 import os
-import uuid
 from http import HTTPStatus
 
-from flask import Blueprint, jsonify, redirect
+from flask import Blueprint
 from flask_restful import Resource, reqparse, request
 
 from src.app.db.db_models import Tokens, Users
 
 from .datastore import UserDataStore
-from .roles_datastore import RolesCRUD
 
 auth = Blueprint('auth', __name__)
 

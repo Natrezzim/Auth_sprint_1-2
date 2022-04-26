@@ -1,4 +1,4 @@
-from src.app.service.auth import RegistrationAPI, LoginApi, RefreshAPI
+from src.app.service.auth import LoginApi, RefreshAPI, RegistrationAPI
 from src.app.service.roles_api import RolesAPI, UserRolesAPI
 
 

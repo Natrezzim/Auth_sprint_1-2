@@ -1,4 +1,4 @@
-from .db_models import AuthHistory, UserPersonalData, Role, Permission, RolePermission, UserRole
+from .db_models import AuthHistory, Permission, Role, RolePermission, UserPersonalData, UserRole
 
 
 class AuthDB:

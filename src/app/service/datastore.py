@@ -1,12 +1,11 @@
 import datetime
 import uuid
-from typing import Optional
 
 import jwt
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from src.app.db.db import db, session_scope
-from src.app.db.db_models import AuthHistory, Tokens, UserPersonalData, Users, Role, UserRole, Permission, RolePermission
+from src.app.db.db_models import AuthHistory, Tokens, UserPersonalData, Users
 
 
 def password_encrypt(username: str, password: str):

@@ -1,10 +1,8 @@
-import datetime
 import uuid
 from dataclasses import dataclass
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import class_mapper, ColumnProperty
 
 from src.app.db.db import db
 

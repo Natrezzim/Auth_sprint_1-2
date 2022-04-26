@@ -3,7 +3,7 @@ import uuid
 from flask import Blueprint, jsonify
 from flask_restful import Resource, reqparse, request
 
-from .roles_datastore import RolesCRUD
+from src.app.service.roles_datastore import RolesCRUD
 
 auth = Blueprint('role', __name__)
 
