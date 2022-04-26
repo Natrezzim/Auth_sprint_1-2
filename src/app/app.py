@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
-from flask_restful import Api
+from flask_restx import Api
 
 from src.app.db.db import init_db
 from src.app.db.db_models import db
@@ -19,7 +19,10 @@ app.register_blueprint(auth)
 app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY')
 jwt = JWTManager(app)
 
-api = Api(app)
+api = Api(app, version='1.0', title='Auth API',
+    description='Сервис авторизации')
+
+ns = api.namespace('auth', description='authentication')
 
 migrate = Migrate(app, db)
 

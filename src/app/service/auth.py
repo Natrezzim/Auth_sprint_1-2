@@ -2,8 +2,8 @@ import datetime
 import os
 from http import HTTPStatus
 
-from flask import Blueprint, jsonify
-from flask_restful import Resource, reqparse, request
+from flask import Blueprint, request, jsonify
+from flask_restx import reqparse, Resource
 
 from src.app.db.db_models import Tokens, Users
 
