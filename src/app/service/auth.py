@@ -2,12 +2,13 @@ import datetime
 import os
 from http import HTTPStatus
 
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from flask_restful import Resource, reqparse, request
 
 from src.app.db.db_models import Tokens, Users
 
 from .datastore import UserDataStore
+from .check_user import CheckAuthUser
 
 auth = Blueprint('auth', __name__)
 
@@ -36,9 +37,7 @@ class RegistrationAPI(Resource):
                 "message": "User with this username already exists"
             }}, HTTPStatus.CONFLICT
         else:
-            new_user_id = UserDataStore.register_user(username=body["username"],
-                                                      password=body["password"],
-                                                      email=body["email"])
+            UserDataStore.register_user(username=body["username"], password=body["password"], email=body["email"])
             return {"message": "Create new user success"}, HTTPStatus.OK
 
 
@@ -88,23 +87,20 @@ class RefreshAPI(Resource):
         refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
         if refresh is None:
             return {"message": "Refresh token not valid"}, HTTPStatus.UNAUTHORIZED
-        # Проверка "свежести" refresh токена
-        refresh_data = UserDataStore.get_user_data_from_token(token=body['refresh_token'], secret_key=SECRET_KEY)
-        current_time = datetime.datetime.now()
-        refresh_expire_time = datetime.datetime.strptime(refresh_data["expires"], "%Y-%m-%dT%H:%M:%S")
-        if current_time > refresh_expire_time:
-            UserDataStore.delete_refresh_token(body['refresh_token'])
-            return {"message": "refresh_token expired"}, HTTPStatus.UNAUTHORIZED
-        # проверка access токена
-        access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
-        user = Users.query.filter_by(id=access_data["user_id"]).one_or_none()
-        if user is None:
-            return {"message": "Access token not valid"}, HTTPStatus.UNAUTHORIZED
-        # генерация новго access токена
-        new_access_token = UserDataStore.create_jwt_token(
-            username=access_data["username"], password=access_data["password"], user_id=access_data["user_id"],
-            expires_delta=EXPIRE_ACCESS, secret_key=SECRET_KEY)
-        return {"token": new_access_token, "refresh_token": body['refresh_token']}, HTTPStatus.OK
+        # Проверка refresh tokena
+        check_refresh_token = CheckAuthUser().check_access_token(token=body['refresh_token'])
+        if check_refresh_token:
+            # Проверяем access токен
+            check_access_token = CheckAuthUser().check_access_token(token=body['refresh_token'])
+            if check_access_token:
+                return {"access_token": body['access_token'], "refresh_token": body['refresh_token']}
+            else:
+                # генерация новго access токена
+                user_data = UserDataStore.get_user_data_from_token(token=body['refresh_token'], secret_key=SECRET_KEY)
+                new_access_token = UserDataStore.create_jwt_token(
+                    username=user_data["username"], password=user_data["password"], user_id=user_data["user_id"],
+                    expires_delta=EXPIRE_ACCESS, secret_key=SECRET_KEY)
+                return {"token": new_access_token, "refresh_token": body['refresh_token']}, HTTPStatus.OK
 
 
 class LogoutAPI(Resource):
@@ -128,9 +124,11 @@ class HistoryAuthAPI(Resource):
 
     def post(self):
         body = request.get_json()
-        access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
-        history_auth = UserDataStore.get_user_history_auth(user_id=access_data['user_id'])
-        return {"history": str(history_auth)}
+        check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
+        if check_access_token:
+            access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
+            return jsonify({"history": UserDataStore.get_user_history_auth(user_id=access_data['user_id'])})
+        return {"access token not valid"}, HTTPStatus.UNAUTHORIZED
 
 
 class ChangeAuthDataAPI(Resource):
@@ -143,11 +141,9 @@ class ChangeAuthDataAPI(Resource):
     def post(self):
         body = request.get_json()
         access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
-        if body.get("new_username", None) is not None:
-            UserDataStore.change_login_user(user_id=access_data["user_id"], new_username=body["new_username"])
-        if body.get("new_password", None) is not None:
-            UserDataStore.change_password_user(user_id=access_data["user_id"], new_password=body["new_password"])
-        else:
-            return {"messaage": "Expected Login or Password for changed"}, HTTPStatus.BAD_REQUEST
-
-        return HTTPStatus.NO_CONTENT
+        check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
+        if check_access_token:
+            access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
+            return jsonify({"history": UserDataStore.get_user_history_auth(user_id=access_data['user_id'])})
+        UserDataStore.change_user(user_id=access_data["user_id"], new_username=body["new_username"],
+                                  new_password=body["new_password"])

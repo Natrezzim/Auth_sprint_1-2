@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from src.app.db.db import db, session_scope
 from src.app.db.db_models import AuthHistory, Tokens, UserPersonalData, Users
-from sqlalchemy import update, delete, insert
+from sqlalchemy import update, delete
 
 
 def password_encrypt(username: str, password: str):
@@ -68,8 +68,8 @@ class UserDataStore:
         Смена логина и пароля пользователя
 
         :param user_id: id пользователя
-        :param username: имя пользователя
-        :param password: пароль
+        :param new_username: имя пользователя
+        :param new_password: пароль
         :return: user_id: None
         """
         user = Users.query.filter_by(id=user_id).one_or_none()
@@ -79,9 +79,6 @@ class UserDataStore:
                 Users.query.filter_by(id=user.id).update({'username': new_username, 'password': password})
             return user.id
         return None
-
-
-
 
     @staticmethod
     def create_jwt_token(user_id: uuid.UUID, username: str, password: str, secret_key: str,
@@ -201,7 +198,7 @@ class UserDataStore:
         """
         history_auth = AuthHistory.query.filter(AuthHistory.user_id == user_id).all()
 
-        return [row._as_dict() for row in history_auth]
+        return history_auth
 
     @staticmethod
     def change_login_user(user_id: str, new_username: str):
@@ -211,7 +208,7 @@ class UserDataStore:
         :param user_id:
         :return:
         """
-        stmt = update(Users).where(Users.user_id == user_id).values(username=new_login). \
+        stmt = update(Users).where(Users.user_id == user_id).values(username=new_username). \
             execution_options(synchronize_session="fetch")
         with session_scope():
             db.session.execute(stmt)

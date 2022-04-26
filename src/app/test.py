@@ -15,10 +15,10 @@ import datetime
 #
 # print(response_r.status_code)
 # print(response_r.text)
-
+#
 # time.sleep(3)
 #
-#
+# #
 # login = {
 #     "username": "test_user",
 #     "password": "test_password"
@@ -29,8 +29,6 @@ import datetime
 # print(response_l.status_code)
 # print(response_l.text)
 #
-# access = response_l.json()["token"]
-# refresh_token = response_l.json()["refresh_token"]
 #
 # time.sleep(3)
 #
@@ -57,7 +55,7 @@ import datetime
 # print(response_l.status_code)
 # print(response_l.text)
 # #
-access = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiZTZhMjE0ZTEtNzdiZS00ZWY5LThiYTUtODQ5NTJiYWRhMmU1IiwidXNlcm5hbWUiOiJ0ZXN0X3VzZXIiLCJwYXNzd29yZCI6InRlc3RfcGFzc3dvcmQiLCJleHBpcmVzIjoiMjAyMi0wNC0yNlQwMDo0Nzo0NSIsInR5cGUiOiJhY2Nlc3MifQ.esL_TjYT2G0j5X-I9QJOmwxUb_oX5fQ3N5Cha-8Us_Y'
+access = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiODhjOTM5YzktOWRiMi00ZDJkLTgwMGMtMTU1MjczNjRjNjExIiwidXNlcm5hbWUiOiJ0ZXN0X3VzZXIiLCJwYXNzd29yZCI6InRlc3RfcGFzc3dvcmQiLCJleHBpcmVzIjoiMjAyMi0wNC0yNlQyMDowNzoyMiIsInR5cGUiOiJhY2Nlc3MifQ.NuY-obEhS9q4a-R0EUVzBR5B8Yo_mmxgF9PqsQMlWGc"
 
 auth_history = {
     "access_token": access
