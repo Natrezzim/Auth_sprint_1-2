@@ -1,12 +1,11 @@
-import datetime
 import uuid
+from typing import Optional
 
-import jwt
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from sqlalchemy import update
 
 from src.app.db.db import db, session_scope
-from src.app.db.db_models import AuthHistory, Tokens, UserPersonalData, Users
-from sqlalchemy import update, delete
+from src.app.db.db_models import AuthHistory, UserPersonalData, Users
 
 
 def password_encrypt(username: str, password: str):
@@ -39,13 +38,13 @@ class UserDataStore:
             return user_id
 
     @staticmethod
-    def register_user(username: str, password: str, email: str):
+    def register_user(username: str, password: str, email: Optional[str] = None):
         """
         Регистрация пользователя
 
+        :param email:
         :param username: имя пользователя
         :param password: пароль
-        :param email: E-mail
         :return: user_id: id нового пользователя
         """
         new_user_id = uuid.uuid4()

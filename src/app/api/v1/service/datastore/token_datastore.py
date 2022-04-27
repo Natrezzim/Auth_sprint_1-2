@@ -1,5 +1,6 @@
 import datetime
 import uuid
+from typing import Optional
 
 import jwt
 
@@ -12,10 +13,11 @@ class TokenDataStore:
 
     @staticmethod
     def create_jwt_token(user_id: uuid.UUID, username: str, password: str, secret_key: str,
-                         expires_delta: datetime.timedelta) -> str:
+                         expires_delta: datetime.timedelta,  admin: Optional[bool] = None) -> str:
         """
         Создание jwt token
 
+        :param admin:
         :param user_id:
         :param username: имя пользователя
         :param password: пароль
@@ -30,7 +32,8 @@ class TokenDataStore:
             "username": str(username),
             "password": str(password),
             "expires": str(expiries_time.strftime("%Y-%m-%dT%H:%M:%S")),
-            "type": "access"
+            "type": "access",
+            "is_administrator": admin
         }
         token = jwt.encode(
             payload=payload,
@@ -40,10 +43,11 @@ class TokenDataStore:
 
     @staticmethod
     def create_refresh_token(username: str, password: str, secret_key: str, expires_delta: datetime.timedelta,
-                             user_id) -> str:
+                             user_id, admin: Optional[bool] = None) -> str:
         """
         Создание refresh token
 
+        :param admin:
         :param user_id:
         :param username: имя пользователя
         :param password: пароль
@@ -58,7 +62,8 @@ class TokenDataStore:
             "username": str(username),
             "password": str(password),
             "expires": str(expiries_time.strftime("%Y-%m-%dT%H:%M:%S")),
-            "type": "refresh"
+            "type": "refresh",
+            "is_administrator": admin
         }
         token = jwt.encode(
             payload=payload,

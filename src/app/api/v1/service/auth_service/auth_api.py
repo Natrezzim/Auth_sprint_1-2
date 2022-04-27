@@ -5,7 +5,8 @@ from http import HTTPStatus
 from flask import Blueprint, request, jsonify
 from flask_restx import reqparse, Resource
 
-from src.app.db.db_models import Tokens, Users
+from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
+from src.app.db.db_models import Tokens, Users, UserRole
 from src.app.api.v1.service.datastore.token_datastore import TokenDataStore
 
 from src.app.api.v1.service.datastore.user_datastore import UserDataStore
@@ -27,7 +28,7 @@ class RegistrationAPI(Resource):
     """
     parser = reqparse.RequestParser()
     parser.add_argument('username', type=str, required=True, help="username")
-    parser.add_argument('email', type=str, required=True, help="email")
+    parser.add_argument('email', type=str, required=False, help="email")
     parser.add_argument('password', type=str, required=True, help="password")
 
     @staticmethod
@@ -60,14 +61,18 @@ class LoginApi(Resource):
                                                user_agent=request.headers.get('User-Agent'))
         if user_id is None:
             return {"error": {
-                "message": "Email or password invalid"}}, HTTPStatus.UNAUTHORIZED
+                "message": "Username or password invalid"}}, HTTPStatus.UNAUTHORIZED
         # генерируем access и refresh токены
+        superuser = False
+        for role in RolesCRUD.check_user_role(user_id):
+            if role.role_type == 'superuser':
+                superuser = True
         access_token = TokenDataStore.create_jwt_token(
             username=body["username"], password=body["password"], user_id=user_id, expires_delta=EXPIRE_ACCESS,
-            secret_key=SECRET_KEY)
+            secret_key=SECRET_KEY, admin=superuser)
         refresh_token = TokenDataStore.create_refresh_token(
             username=body["username"], password=body["password"], user_id=user_id, expires_delta=EXPIRE_REFRESH,
-            secret_key=SECRET_KEY)
+            secret_key=SECRET_KEY, admin=superuser)
         # Проверяем наличие refresh токена в БД
         current_refresh = TokenDataStore.get_refresh_token(user_id=user_id)
         if current_refresh:

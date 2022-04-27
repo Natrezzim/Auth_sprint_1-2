@@ -4,6 +4,7 @@ import uuid
 from flask import Blueprint, jsonify, request
 from flask_restx import Resource, reqparse
 
+from src.app.api.v1.service.decorators import admin_required
 from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
 from src.app.utils.pagination import get_paginated_list
 
@@ -23,12 +24,14 @@ class RolesAPI(Resource):
     parser.add_argument('description', type=str, required=False, help="description")
 
     @staticmethod
+    @admin_required()
     def get():
         return jsonify(get_paginated_list(RolesCRUD.get_all_roles(), '/api/v1/roles',
                                           start=request.args.get('start', ROLE_START_PAGE),
                                           limit=request.args.get('limit', ROLE_PAGE_LIMIT)))
 
     @staticmethod
+    @admin_required()
     def post():
         body = request.get_json()
         try:
@@ -38,6 +41,7 @@ class RolesAPI(Resource):
             return str(e)
 
     @staticmethod
+    @admin_required()
     def put():
         body = request.get_json()
         try:
@@ -47,6 +51,7 @@ class RolesAPI(Resource):
             return str(e)
 
     @staticmethod
+    @admin_required()
     def delete():
         body = request.get_json()
         try:
@@ -66,11 +71,13 @@ class UserRolesAPI(Resource):
     parser.add_argument('role_id', type=uuid.uuid4(), required=False, help="role_id")
 
     @staticmethod
+    @admin_required()
     def get():
         body = request.get_json()
         return jsonify(RolesCRUD.check_user_role(body.get("user_id")))
 
     @staticmethod
+    @admin_required()
     def post():
         body = request.get_json()
         try:
@@ -80,6 +87,7 @@ class UserRolesAPI(Resource):
             return str(e)
 
     @staticmethod
+    @admin_required()
     def delete():
         body = request.get_json()
         try:
