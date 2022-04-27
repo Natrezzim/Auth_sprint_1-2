@@ -7,7 +7,7 @@ from flask_restx import Resource, reqparse
 from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
 from src.app.utils.pagination import get_paginated_list
 
-auth = Blueprint('role', __name__)
+roles = Blueprint('roles', __name__)
 
 ROLE_START_PAGE = os.getenv('ROLE_START_PAGE')
 ROLE_PAGE_LIMIT = os.getenv('ROLE_PAGE_LIMIT')
