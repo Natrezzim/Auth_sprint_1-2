@@ -1,16 +1,21 @@
+import os
 import uuid
 
 from flask import Blueprint, jsonify, request
-from flask_restx import reqparse, Resource
+from flask_restx import Resource, reqparse
 
 from src.app.service.roles_datastore import RolesCRUD
+from src.app.utils.pagination import get_paginated_list
 
 auth = Blueprint('role', __name__)
+
+ROLE_START_PAGE = os.getenv('ROLE_START_PAGE')
+ROLE_PAGE_LIMIT = os.getenv('ROLE_PAGE_LIMIT')
 
 
 class RolesAPI(Resource):
     """
-    Логика работы метода api/auth/roles
+    Логика работы метода api/v1/roles
     """
     parser = reqparse.RequestParser()
     parser.add_argument('id', type=uuid.uuid4(), required=False, help="id")
@@ -19,7 +24,9 @@ class RolesAPI(Resource):
 
     @staticmethod
     def get():
-        return jsonify(RolesCRUD.get_all_roles())
+        return jsonify(get_paginated_list(RolesCRUD.get_all_roles(), '/api/v1/roles',
+                                          start=request.args.get('start', ROLE_START_PAGE),
+                                          limit=request.args.get('limit', ROLE_PAGE_LIMIT)))
 
     @staticmethod
     def post():
@@ -51,7 +58,7 @@ class RolesAPI(Resource):
 
 class UserRolesAPI(Resource):
     """
-        Логика работы метода api/auth/user-roles
+        Логика работы метода api/v1/user-roles
         """
 
     parser = reqparse.RequestParser()

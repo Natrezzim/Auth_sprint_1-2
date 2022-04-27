@@ -9,13 +9,15 @@ from src.app.db.db_models import Tokens, Users
 
 from .datastore import UserDataStore
 from .check_user import CheckAuthUser
+from ..utils.pagination import get_paginated_list
 
 auth = Blueprint('auth', __name__)
-
 
 EXPIRE_REFRESH = datetime.timedelta(days=int(os.getenv('REFRESH_TOKEN_EXPIRED')))
 EXPIRE_ACCESS = datetime.timedelta(hours=int(os.getenv('ACCESS_TOKEN_EXPIRED')))
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+AUTH_HISTORY_START_PAGE = os.getenv('AUTH_HISTORY_START_PAGE')
+AUTH_HISTORY__PAGE_LIMIT = os.getenv('AUTH_HISTORY__PAGE_LIMIT')
 
 
 class RegistrationAPI(Resource):
@@ -75,7 +77,6 @@ class LoginApi(Resource):
 
 
 class RefreshAPI(Resource):
-
     parser = reqparse.RequestParser()
     parser.add_argument('access_token', type=str, required=True, help="access_token")
     parser.add_argument('refresh_token', type=str, required=True, help="refresh_token")
@@ -104,11 +105,11 @@ class RefreshAPI(Resource):
 
 
 class LogoutAPI(Resource):
-
     parser = reqparse.RequestParser()
     parser.add_argument('refresh_token', type=str, required=True, help="refresh_token")
 
-    def post(self):
+    @staticmethod
+    def post():
         body = request.get_json()
         refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
         if refresh is None:
@@ -118,27 +119,30 @@ class LogoutAPI(Resource):
 
 
 class HistoryAuthAPI(Resource):
-
     parser = reqparse.RequestParser()
     parser.add_argument('access_token', type=str, required=True, help="access_token")
 
-    def post(self):
+    @staticmethod
+    def get():
         body = request.get_json()
         check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
         if check_access_token:
             access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
-            return jsonify({"history": UserDataStore.get_user_history_auth(user_id=access_data['user_id'])})
+            return jsonify({"history": get_paginated_list(
+                UserDataStore.get_user_history_auth(user_id=access_data['user_id']), '/api/v1/auth_history',
+                start=request.args.get('start', AUTH_HISTORY_START_PAGE),
+                limit=request.args.get('limit', AUTH_HISTORY__PAGE_LIMIT))})
         return {"access token not valid"}, HTTPStatus.UNAUTHORIZED
 
 
 class ChangeAuthDataAPI(Resource):
-
     parser = reqparse.RequestParser()
     parser.add_argument('new_username', type=str, help="login")
     parser.add_argument('new_password', type=str, help="password")
     parser.add_argument('access_token', type=str, required=True, help="access_token")
 
-    def post(self):
+    @staticmethod
+    def post():
         body = request.get_json()
         access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
         check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])

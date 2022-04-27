@@ -39,6 +39,7 @@ class AuthHistory(db.Model):
     def __repr__(self):
         return f'<AuthHistory {self.id}>'
 
+
 @dataclass
 class UserPersonalData(db.Model):
     __tablename__ = 'user_personal_data'
@@ -130,7 +131,6 @@ class Tokens(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
     refresh_token = db.Column(db.String, nullable=False)
-
 
     def __iter__(self):
         return iter(self.data)

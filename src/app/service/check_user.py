@@ -18,7 +18,7 @@ class CheckAuthUser:
         # Получаем данные пользователя
         token_data = UserDataStore.get_user_data_from_token(token=token, secret_key=self.secret_key)
         # Проверяем наличие пользователя в БД
-        check_user = Users.query.filter_by(user_id=token_data['user_id']).one_or_none()
+        check_user = Users.query.filter_by(id=token_data['user_id']).one_or_none()
         if check_user is None:
             return False
         # Проверяем срок действия токена
