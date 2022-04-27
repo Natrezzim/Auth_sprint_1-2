@@ -4,7 +4,7 @@ import uuid
 from flask import Blueprint, jsonify, request
 from flask_restx import Resource, reqparse
 
-from src.app.service.roles_datastore import RolesCRUD
+from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
 from src.app.utils.pagination import get_paginated_list
 
 auth = Blueprint('role', __name__)

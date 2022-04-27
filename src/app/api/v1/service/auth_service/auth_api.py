@@ -6,10 +6,11 @@ from flask import Blueprint, request, jsonify
 from flask_restx import reqparse, Resource
 
 from src.app.db.db_models import Tokens, Users
+from src.app.api.v1.service.datastore.token_datastore import TokenDataStore
 
-from .datastore import UserDataStore
-from .check_user import CheckAuthUser
-from ..utils.pagination import get_paginated_list
+from src.app.api.v1.service.datastore.user_datastore import UserDataStore
+from src.app.api.v1.service.check_user import CheckAuthUser
+from src.app.utils.pagination import get_paginated_list
 
 auth = Blueprint('auth', __name__)
 
@@ -61,18 +62,18 @@ class LoginApi(Resource):
             return {"error": {
                 "message": "Email or password invalid"}}, HTTPStatus.UNAUTHORIZED
         # генерируем access и refresh токены
-        access_token = UserDataStore.create_jwt_token(
+        access_token = TokenDataStore.create_jwt_token(
             username=body["username"], password=body["password"], user_id=user_id, expires_delta=EXPIRE_ACCESS,
             secret_key=SECRET_KEY)
-        refresh_token = UserDataStore.create_refresh_token(
+        refresh_token = TokenDataStore.create_refresh_token(
             username=body["username"], password=body["password"], user_id=user_id, expires_delta=EXPIRE_REFRESH,
             secret_key=SECRET_KEY)
         # Проверяем наличие refresh токена в БД
-        current_refresh = UserDataStore.get_refresh_token(user_id=user_id)
+        current_refresh = TokenDataStore.get_refresh_token(user_id=user_id)
         if current_refresh:
             return {"message": "User is authorized"}
         # заливаем refresh токен в БД
-        UserDataStore.save_refresh_token(refresh_token=refresh_token, user_id=user_id)
+        TokenDataStore.save_refresh_token(refresh_token=refresh_token, user_id=user_id)
         return {"access_token": access_token, "refresh_token": refresh_token, "message": "Login success"}, HTTPStatus.OK
 
 
@@ -97,8 +98,8 @@ class RefreshAPI(Resource):
                 return {"access_token": body['access_token'], "refresh_token": body['refresh_token']}
             else:
                 # генерация новго access токена
-                user_data = UserDataStore.get_user_data_from_token(token=body['refresh_token'], secret_key=SECRET_KEY)
-                new_access_token = UserDataStore.create_jwt_token(
+                user_data = TokenDataStore.get_user_data_from_token(token=body['refresh_token'], secret_key=SECRET_KEY)
+                new_access_token = TokenDataStore.create_jwt_token(
                     username=user_data["username"], password=user_data["password"], user_id=user_data["user_id"],
                     expires_delta=EXPIRE_ACCESS, secret_key=SECRET_KEY)
                 return {"token": new_access_token, "refresh_token": body['refresh_token']}, HTTPStatus.OK
@@ -114,7 +115,7 @@ class LogoutAPI(Resource):
         refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
         if refresh is None:
             return {"message": "Refresh token not valid"}, HTTPStatus.UNAUTHORIZED
-        UserDataStore.delete_refresh_token(refresh.refresh_token)
+        TokenDataStore.delete_refresh_token(refresh.refresh_token)
         return HTTPStatus.NO_CONTENT
 
 
@@ -127,7 +128,7 @@ class HistoryAuthAPI(Resource):
         body = request.get_json()
         check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
         if check_access_token:
-            access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
+            access_data = TokenDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
             return jsonify({"history": get_paginated_list(
                 UserDataStore.get_user_history_auth(user_id=access_data['user_id']), '/api/v1/auth_history',
                 start=request.args.get('start', AUTH_HISTORY_START_PAGE),
@@ -144,10 +145,10 @@ class ChangeAuthDataAPI(Resource):
     @staticmethod
     def post():
         body = request.get_json()
-        access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
+        access_data = TokenDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
         check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
         if check_access_token:
-            access_data = UserDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
+            access_data = TokenDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
             return jsonify({"history": UserDataStore.get_user_history_auth(user_id=access_data['user_id'])})
         UserDataStore.change_user(user_id=access_data["user_id"], new_username=body["new_username"],
                                   new_password=body["new_password"])

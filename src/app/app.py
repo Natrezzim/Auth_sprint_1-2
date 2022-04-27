@@ -8,8 +8,8 @@ from flask_restx import Api
 
 from src.app.db.db import init_db
 from src.app.db.db_models import db
-from src.app.service.auth import auth
-from src.app.service.routes import initialize_routes
+from src.app.api.v1.service.auth_service.auth_api import auth
+from src.app.api.v1.routes.routes import initialize_routes
 
 load_dotenv(f'{os.getcwd()}/.env')
 
