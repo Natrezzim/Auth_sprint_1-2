@@ -3,7 +3,7 @@ import os
 from http import HTTPStatus
 
 from flask import Blueprint, request, jsonify
-from flask_restx import reqparse, Resource
+from flask_restx import reqparse, Resource, Namespace
 
 from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
 from src.app.db.db_models import Tokens, Users, UserRole
@@ -21,7 +21,10 @@ SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 AUTH_HISTORY_START_PAGE = os.getenv('AUTH_HISTORY_START_PAGE')
 AUTH_HISTORY__PAGE_LIMIT = os.getenv('AUTH_HISTORY__PAGE_LIMIT')
 
+api_namespace = Namespace("roles", description='roles')
 
+
+@api_namespace.doc(params={'username': 'Имя пользователя', 'password': 'Пароль', 'email': 'Электронная почта'})
 class RegistrationAPI(Resource):
     """
     логика работы метода для регистрации нового пользователя api/auth/registration
@@ -33,7 +36,7 @@ class RegistrationAPI(Resource):
 
     @staticmethod
     def post():
-        body = request.get_json()
+        body = request.args
         # проверяем, что такого пользователя нет в БД
         check_user = Users.query.filter_by(username=body['username']).one_or_none()
         if check_user is not None:
@@ -45,6 +48,7 @@ class RegistrationAPI(Resource):
             return {"message": "Create new user success"}, HTTPStatus.OK
 
 
+@api_namespace.doc(params={'username': 'Имя пользователя', 'password': 'Пароль'})
 class LoginApi(Resource):
     """
     логика работы метода api/auth/login
@@ -53,9 +57,10 @@ class LoginApi(Resource):
     parser.add_argument('username', type=str, required=True, help="username")
     parser.add_argument('password', type=str, required=True, help="password")
 
+
     @staticmethod
     def post():
-        body = request.get_json()
+        body = request.args
         # проверяем авторизационные данные
         user_id = UserDataStore.authorize_user(username=body.get('username'), password=body.get('password'),
                                                user_agent=request.headers.get('User-Agent'))
@@ -82,6 +87,7 @@ class LoginApi(Resource):
         return {"access_token": access_token, "refresh_token": refresh_token, "message": "Login success"}, HTTPStatus.OK
 
 
+@api_namespace.doc(params={'access_token': 'Access Token', 'refresh_token': 'Refresh Token'})
 class RefreshAPI(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('access_token', type=str, required=True, help="access_token")
@@ -89,7 +95,7 @@ class RefreshAPI(Resource):
 
     @staticmethod
     def post():
-        body = request.get_json()
+        body = request.args
         # Проверка Наличия refresh токена в БД
         refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
         if refresh is None:
@@ -110,13 +116,14 @@ class RefreshAPI(Resource):
                 return {"token": new_access_token, "refresh_token": body['refresh_token']}, HTTPStatus.OK
 
 
+@api_namespace.doc(params={'refresh_token': 'Refresh Token'})
 class LogoutAPI(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('refresh_token', type=str, required=True, help="refresh_token")
 
     @staticmethod
     def post():
-        body = request.get_json()
+        body = request.args
         refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
         if refresh is None:
             return {"message": "Refresh token not valid"}, HTTPStatus.UNAUTHORIZED
@@ -124,13 +131,14 @@ class LogoutAPI(Resource):
         return HTTPStatus.NO_CONTENT
 
 
+@api_namespace.doc(params={'access_token': 'Access Token'})
 class HistoryAuthAPI(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('access_token', type=str, required=True, help="access_token")
 
     @staticmethod
     def get():
-        body = request.get_json()
+        body = request.args
         check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
         if check_access_token:
             access_data = TokenDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
@@ -141,6 +149,8 @@ class HistoryAuthAPI(Resource):
         return {"access token not valid"}, HTTPStatus.UNAUTHORIZED
 
 
+@api_namespace.doc(
+    params={'new_username': 'Новое имя пользователя', 'new_password': 'Новый пароль', 'access_token': 'Access Token'})
 class ChangeAuthDataAPI(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('new_username', type=str, help="login")
@@ -149,7 +159,7 @@ class ChangeAuthDataAPI(Resource):
 
     @staticmethod
     def post():
-        body = request.get_json()
+        body = request.args
         access_data = TokenDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
         check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
         if check_access_token:
