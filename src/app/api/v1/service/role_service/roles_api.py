@@ -17,7 +17,7 @@ ROLE_PAGE_LIMIT = os.getenv('ROLE_PAGE_LIMIT')
 role_namespace = Namespace("roles", description='roles')
 
 
-@role_namespace.doc(params={'id': 'ID Роли', 'role': 'Тип роли', 'description': 'Описание', 'access_token': 'access_token'})
+@role_namespace.doc(params={'id': 'ID Роли', 'role': 'Тип роли', 'description': 'Описание'})
 class RolesAPI(Resource):
     """
     Логика работы метода api/v1/roles
@@ -26,7 +26,6 @@ class RolesAPI(Resource):
     parser.add_argument('id', type=uuid.uuid4(), required=False, help="id")
     parser.add_argument('role', type=str, required=False, help="role")
     parser.add_argument('description', type=str, required=False, help="description")
-    parser.add_argument('access_token', type=str, required=True, help="access_token")
 
     @staticmethod
     @admin_required()
@@ -38,19 +37,19 @@ class RolesAPI(Resource):
     @staticmethod
     @admin_required()
     def post():
-        body = request.args
+        body = request.get_json()
         try:
             return jsonify({'message': 'Role Created'},
-                           RolesCRUD.create_role(body["role"], body["description"]))
+                           RolesCRUD.create_role(body.get("role"), body.get("description")))
         except Exception as e:
             return str(e)
 
     @staticmethod
     @admin_required()
     def put():
-        body = request.args
+        body = request.get_json()
         try:
-            RolesCRUD.update_role(body["id"], body["role"], body["description"])
+            RolesCRUD.update_role(body.get("id"), body.get("role"), body.get("description"))
             return {'message': 'Role Updated'}
         except Exception as e:
             return str(e)
@@ -58,7 +57,7 @@ class RolesAPI(Resource):
     @staticmethod
     @admin_required()
     def delete():
-        body = request.args
+        body = request.get_json()
         try:
             RolesCRUD.delete_role(body.get("id"))
             return {'message': 'Role Deleted'}
@@ -79,15 +78,15 @@ class UserRolesAPI(Resource):
     @staticmethod
     @admin_required()
     def get():
-        body = request.args
-        return jsonify(RolesCRUD.check_user_role(body["user_id"]))
+        body = request.get_json()
+        return jsonify(RolesCRUD.check_user_role(body.get("user_id")))
 
     @staticmethod
     @admin_required()
     def post():
-        body = request.args
+        body = request.get_json()
         try:
-            jsonify(RolesCRUD.add_role_to_user(body["user_id"], body["role_id"]))
+            jsonify(RolesCRUD.add_role_to_user(body.get("user_id"), body.get("role_id")))
             return {'message': 'Role added to User'}
         except Exception as e:
             return str(e)
@@ -95,9 +94,9 @@ class UserRolesAPI(Resource):
     @staticmethod
     @admin_required()
     def delete():
-        body = request.args
+        body = request.get_json()
         try:
-            jsonify(RolesCRUD.delete_user_role(body["user_id"], body["role_id"]))
+            jsonify(RolesCRUD.delete_user_role(body.get("user_id"), body.get("role_id")))
             return {'message': 'User role deleted'}
         except Exception as e:
             return str(e)

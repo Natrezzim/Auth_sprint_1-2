@@ -36,7 +36,7 @@ class RegistrationAPI(Resource):
 
     @staticmethod
     def post():
-        body = request.args
+        body = request.get_json()
         # проверяем, что такого пользователя нет в БД
         check_user = Users.query.filter_by(username=body['username']).one_or_none()
         if check_user is not None:
@@ -57,10 +57,9 @@ class LoginApi(Resource):
     parser.add_argument('username', type=str, required=True, help="username")
     parser.add_argument('password', type=str, required=True, help="password")
 
-
     @staticmethod
     def post():
-        body = request.args
+        body = request.get_json()
         # проверяем авторизационные данные
         user_id = UserDataStore.authorize_user(username=body.get('username'), password=body.get('password'),
                                                user_agent=request.headers.get('User-Agent'))
@@ -95,7 +94,7 @@ class RefreshAPI(Resource):
 
     @staticmethod
     def post():
-        body = request.args
+        body = request.get_json()
         # Проверка Наличия refresh токена в БД
         refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
         if refresh is None:
@@ -123,7 +122,7 @@ class LogoutAPI(Resource):
 
     @staticmethod
     def post():
-        body = request.args
+        body = request.get_json()
         refresh = Tokens.query.filter_by(refresh_token=body['refresh_token']).one_or_none()
         if refresh is None:
             return {"message": "Refresh token not valid"}, HTTPStatus.UNAUTHORIZED
@@ -138,7 +137,7 @@ class HistoryAuthAPI(Resource):
 
     @staticmethod
     def get():
-        body = request.args
+        body = request.get_json()
         check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
         if check_access_token:
             access_data = TokenDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
@@ -148,9 +147,7 @@ class HistoryAuthAPI(Resource):
                 limit=request.args.get('limit', AUTH_HISTORY__PAGE_LIMIT))})
         return {"access token not valid"}, HTTPStatus.UNAUTHORIZED
 
-
-@api_namespace.doc(
-    params={'new_username': 'Новое имя пользователя', 'new_password': 'Новый пароль', 'access_token': 'Access Token'})
+@api_namespace.doc(params={'new_username': 'Новое имя пользователя', 'new_password': 'Новый пароль', 'access_token': 'Access Token'})
 class ChangeAuthDataAPI(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('new_username', type=str, help="login")
@@ -159,7 +156,7 @@ class ChangeAuthDataAPI(Resource):
 
     @staticmethod
     def post():
-        body = request.args
+        body = request.get_json()
         access_data = TokenDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
         check_access_token = CheckAuthUser().check_access_token(token=body['access_token'])
         if check_access_token:
