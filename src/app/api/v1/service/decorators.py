@@ -13,9 +13,7 @@ def admin_required():
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
-            parser = reqparse.RequestParser()
-            parser.add_argument('access_token', type=str, required=True, help="access_token")
-            body = request.get_json()
+            body = request.args
             access_data = TokenDataStore.get_user_data_from_token(token=body['access_token'], secret_key=SECRET_KEY)
             if access_data["is_administrator"]:
                 return fn(*args, **kwargs)

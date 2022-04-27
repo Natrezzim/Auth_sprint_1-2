@@ -7,7 +7,7 @@ from flask_migrate import Migrate
 from flask_restx import Api
 
 from src.app.api.v1.routes.routes import initialize_routes
-from src.app.api.v1.service.auth_service.auth_api import auth
+from src.app.api.v1.service.auth_service.auth_api import auth, auth_namespace
 from src.app.api.v1.service.role_service.cli_commands import adm_cmd
 from src.app.api.v1.service.role_service.roles_api import roles, role_namespace
 from src.app.db.db import init_db
@@ -29,6 +29,7 @@ app.register_blueprint(auth)
 app.register_blueprint(roles)
 app.register_blueprint(adm_cmd)
 api.add_namespace(role_namespace)
+api.add_namespace(auth_namespace)
 
 if __name__ == '__main__':
     app.run()

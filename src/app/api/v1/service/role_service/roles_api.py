@@ -2,7 +2,7 @@ import os
 import uuid
 
 from flask import Blueprint, jsonify, request
-from flask_restx import Resource, reqparse
+from flask_restx import Resource, reqparse, fields
 
 from flask_restx import Namespace
 from src.app.api.v1.service.decorators import admin_required
@@ -16,8 +16,14 @@ ROLE_PAGE_LIMIT = os.getenv('ROLE_PAGE_LIMIT')
 
 role_namespace = Namespace("roles", description='roles')
 
+roles_model = role_namespace.model('Roles', {
+    'id': fields.String,
+    'role': fields.String,
+    'description': fields.String,
+})
 
-@role_namespace.doc(params={'id': 'ID Роли', 'role': 'Тип роли', 'description': 'Описание'})
+
+@role_namespace.doc(params={'access_token': 'access_token'})
 class RolesAPI(Resource):
     """
     Логика работы метода api/v1/roles
@@ -35,6 +41,7 @@ class RolesAPI(Resource):
                                           limit=request.args.get('limit', ROLE_PAGE_LIMIT)))
 
     @staticmethod
+    @role_namespace.expect(roles_model)
     @admin_required()
     def post():
         body = request.get_json()
@@ -45,6 +52,7 @@ class RolesAPI(Resource):
             return str(e)
 
     @staticmethod
+    @role_namespace.expect(roles_model)
     @admin_required()
     def put():
         body = request.get_json()
@@ -55,6 +63,7 @@ class RolesAPI(Resource):
             return str(e)
 
     @staticmethod
+    @role_namespace.expect(roles_model)
     @admin_required()
     def delete():
         body = request.get_json()
@@ -65,7 +74,13 @@ class RolesAPI(Resource):
             return str(e)
 
 
-@role_namespace.doc(params={'user_id': 'ID Пользователя', 'role_id': 'ID Роли'})
+user_roles_model = role_namespace.model('UserRoles', {
+    'user_id': fields.String,
+    'role_id': fields.String
+})
+
+
+@role_namespace.doc(params={'access_token': 'access_token'})
 class UserRolesAPI(Resource):
     """
         Логика работы метода api/v1/user-roles
@@ -76,12 +91,14 @@ class UserRolesAPI(Resource):
     parser.add_argument('role_id', type=uuid.uuid4(), required=False, help="role_id")
 
     @staticmethod
+    @role_namespace.expect(user_roles_model)
     @admin_required()
     def get():
         body = request.get_json()
         return jsonify(RolesCRUD.check_user_role(body.get("user_id")))
 
     @staticmethod
+    @role_namespace.expect(user_roles_model)
     @admin_required()
     def post():
         body = request.get_json()
@@ -92,6 +109,7 @@ class UserRolesAPI(Resource):
             return str(e)
 
     @staticmethod
+    @role_namespace.expect(user_roles_model)
     @admin_required()
     def delete():
         body = request.get_json()
