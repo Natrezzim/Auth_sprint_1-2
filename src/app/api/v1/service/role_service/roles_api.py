@@ -91,11 +91,11 @@ class UserRolesAPI(Resource):
     parser.add_argument('role_id', type=uuid.uuid4(), required=False, help="role_id")
 
     @staticmethod
-    @role_namespace.expect(user_roles_model)
+    @role_namespace.doc(params={'user_id': 'user_id'})
     @admin_required()
     def get():
-        body = request.get_json()
-        return jsonify(RolesCRUD.check_user_role(body.get("user_id")))
+        body = request.args
+        return jsonify(RolesCRUD.check_user_role(body["user_id"]))
 
     @staticmethod
     @role_namespace.expect(user_roles_model)
