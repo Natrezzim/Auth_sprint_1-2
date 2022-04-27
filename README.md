@@ -1,6 +1,20 @@
 # Auth_sprint_1-2
 Сервис авторизации
 
+Комманды для запуска проекта
+-
+*Первый запуск*  
+
+**make first_start**
+- Применяет миграции  
+flask init  
+flask migrate  
+flask upgrade  
+
+Все комманды make  
+
+**make help**
+
 Миграция локально
 -
 
@@ -8,10 +22,15 @@
 2) python -m flask migrate
 3) python -m flask upgrade
 
+CLI комманды
+-
+flask adm-cmd create-superuser "yourusername" "yourpassword"
+
 Инфрастуктура
 -
-Flask доступен по адресу http://127.0.0.1:80  
-Доступен один эндпоинт /hello-world  
+Flask доступен по адресу http://127.0.0.1:80/  
+Документация http://127.0.0.1:80/    
+API http://127.0.0.1:80/api/v1/  
 PostgreSQL доступна снаружи для разработки временно
 
 Таблицы
@@ -24,7 +43,7 @@ PostgreSQL доступна снаружи для разработки врем�
     id UUID
     user_id UUID
     user_agent String
-    auth_date TIMESTAMP
+    auth_date DateTime
 #### user_personal_data  
     id UUID
     user_id UUID
@@ -45,5 +64,9 @@ PostgreSQL доступна снаружи для разработки врем�
     id UUID
     user_id UUID
     user_id UUID
+### tokens
+    id UUID
+    user_id UUID
+    refresh_token String
 
 ![](./img/A8sTAkZhQm.png)
