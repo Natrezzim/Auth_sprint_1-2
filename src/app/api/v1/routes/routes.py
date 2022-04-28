@@ -1,5 +1,5 @@
-from src.app.service.auth import LoginApi, RefreshAPI, RegistrationAPI, LogoutAPI, HistoryAuthAPI, ChangeAuthDataAPI
-from src.app.service.roles_api import RolesAPI, UserRolesAPI
+from src.app.api.v1.service.auth_service.auth_api import LoginApi, RefreshAPI, RegistrationAPI, LogoutAPI, HistoryAuthAPI, ChangeAuthDataAPI
+from src.app.api.v1.service.role_service.roles_api import RolesAPI, UserRolesAPI
 
 
 def initialize_routes(api):

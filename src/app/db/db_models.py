@@ -39,6 +39,7 @@ class AuthHistory(db.Model):
     def __repr__(self):
         return f'<AuthHistory {self.id}>'
 
+
 @dataclass
 class UserPersonalData(db.Model):
     __tablename__ = 'user_personal_data'
@@ -49,7 +50,7 @@ class UserPersonalData(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    email = db.Column(db.String, nullable=False, unique=True)
+    email = db.Column(db.String, nullable=True, unique=True)
 
     def __repr__(self):
         return f'<UserPersonalData {self.id}>'
@@ -113,7 +114,7 @@ class UserRole(db.Model):
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=False, nullable=False)
-    role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=True, nullable=False)
+    role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=False, nullable=False)
 
     def __repr__(self):
         return f'<UserRole {self.id}>'
@@ -130,7 +131,6 @@ class Tokens(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
     refresh_token = db.Column(db.String, nullable=False)
-
 
     def __iter__(self):
         return iter(self.data)

@@ -2,7 +2,7 @@ import uuid
 from typing import Optional
 
 from src.app.db.db import db, session_scope
-from src.app.db.db_models import Permission, Role, RolePermission, UserRole
+from src.app.db.db_models import Role, UserRole
 
 
 class RolesCRUD:
@@ -73,14 +73,12 @@ class RolesCRUD:
         :return: user_roles: Роли пользователя и права ролей
         """
         with session_scope():
-            records = db.session.query(UserRole, Role, RolePermission, Permission) \
+            records = db.session.query(UserRole, Role) \
                 .filter(UserRole.user_id == user_id,
-                        UserRole.role_id == Role.id,
-                        Role.id == RolePermission.role_id,
-                        Permission.id == RolePermission.permission_id).all()
+                        UserRole.role_id == Role.id).all()
         user_roles = []
-        for user_role, role, role_permission, permission in records:
-            user_roles.append([role, permission])
+        for user_role, role in records:
+            user_roles.append(role)
         return user_roles
 
     @staticmethod
@@ -109,3 +107,4 @@ class RolesCRUD:
         """
         with session_scope():
             UserRole.query.filter_by(user_id=user_id, role_id=role_id).delete()
+
