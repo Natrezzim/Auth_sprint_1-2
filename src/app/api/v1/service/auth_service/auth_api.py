@@ -21,7 +21,7 @@ SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 AUTH_HISTORY_START_PAGE = os.getenv('AUTH_HISTORY_START_PAGE')
 AUTH_HISTORY__PAGE_LIMIT = os.getenv('AUTH_HISTORY__PAGE_LIMIT')
 
-auth_namespace = Namespace("roles", description='roles')
+auth_namespace = Namespace("auth", description='auth')
 
 registration_model = auth_namespace.model('Registration', {
     'username': fields.String,
