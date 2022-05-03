@@ -1,0 +1,3 @@
+YANDEX_CLIENT_ID =
+YANDEX_CLIENT_SECRET =
+YANDEX_ACCESS_TOKEN_URL = 'https://oauth.yandex.ru/'
