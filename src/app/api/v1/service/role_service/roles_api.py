@@ -2,11 +2,10 @@ import os
 import uuid
 
 from flask import Blueprint, jsonify, request
-from flask_restx import Resource, reqparse, fields
+from flask_restx import Namespace, Resource, fields, reqparse
 
-from flask_restx import Namespace
-from src.app.api.v1.service.decorators import admin_required
 from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
+from src.app.api.v1.service.decorators import admin_required
 from src.app.utils.pagination import get_paginated_list
 
 roles = Blueprint('roles', __name__)

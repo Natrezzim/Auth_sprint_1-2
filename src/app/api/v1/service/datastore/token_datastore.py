@@ -3,10 +3,10 @@ import uuid
 from typing import Optional
 
 import jwt
+from sqlalchemy import delete, update
 
 from src.app.db.db import db, session_scope
 from src.app.db.db_models import Tokens
-from sqlalchemy import update, delete
 
 
 class TokenDataStore:

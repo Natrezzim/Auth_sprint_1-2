@@ -2,15 +2,14 @@ import datetime
 import os
 from http import HTTPStatus
 
-from flask import Blueprint, request, jsonify
-from flask_restx import reqparse, Resource, Namespace, fields
+from flask import Blueprint, jsonify, request
+from flask_restx import Namespace, Resource, fields, reqparse
 
-from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
-from src.app.db.db_models import Tokens, Users, UserRole
-from src.app.api.v1.service.datastore.token_datastore import TokenDataStore
-
-from src.app.api.v1.service.datastore.user_datastore import UserDataStore
 from src.app.api.v1.service.check_user import CheckAuthUser
+from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
+from src.app.api.v1.service.datastore.token_datastore import TokenDataStore
+from src.app.api.v1.service.datastore.user_datastore import UserDataStore
+from src.app.db.db_models import Tokens, UserRole, Users
 from src.app.utils.pagination import get_paginated_list
 
 auth = Blueprint('auth', __name__)

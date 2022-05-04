@@ -1,7 +1,8 @@
+import datetime
+import os
+
 from src.app.api.v1.service.datastore.token_datastore import TokenDataStore
 from src.app.db.db_models import Users
-import os
-import datetime
 
 
 class CheckAuthUser:
