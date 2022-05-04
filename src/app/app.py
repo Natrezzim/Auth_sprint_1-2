@@ -20,9 +20,8 @@ app = Flask(__name__)
 jwt = JWTManager(app)
 api = Api(app, version='1.0', title='Auth API',
           description='Сервис авторизации', doc='/doc/')
-app.config.from_object('config')
 migrate = Migrate(app, db)
-
+app.config["SECRET_KEY"] = '3212gregbergqfwwe'
 
 app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY')
 
