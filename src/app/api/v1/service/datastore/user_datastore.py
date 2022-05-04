@@ -1,11 +1,13 @@
+import string
 import uuid
+from secrets import choice as secrets_choice
 from typing import Optional
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from sqlalchemy import update
+from sqlalchemy import or_, update
 
 from src.app.db.db import db, session_scope
-from src.app.db.db_models import AuthHistory, UserPersonalData, Users
+from src.app.db.db_models import AuthHistory, SocialAccount, UserPersonalData, Users
 
 
 def password_encrypt(username: str, password: str):
@@ -14,6 +16,11 @@ def password_encrypt(username: str, password: str):
     key = kdf.derive(str.encode(password))
     password = str(key)
     return password
+
+
+def generate_random_string():
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets_choice(alphabet) for _ in range(16))
 
 
 class UserDataStore:
@@ -117,3 +124,49 @@ class UserDataStore:
         with session_scope():
             db.session.execute(stmt)
             db.session.commit()
+
+    @staticmethod
+    def register_user_with_social(username: str, social_id: str, social_name: str, email: Optional[str] = None):
+        """
+        Регистрация пользователя
+
+        :param social_name:
+        :param social_id:
+        :param email:
+        :param username: имя пользователя
+        :return: user_id: id нового пользователя
+        """
+        new_user_id = uuid.uuid4()
+        password = password_encrypt(username, generate_random_string())
+        new_user = Users(id=new_user_id, username=username, password=password)
+        new_user_data = UserPersonalData(id=uuid.uuid4(), user_id=new_user_id, email=email)
+        with session_scope():
+            db.session.add(new_user)
+            db.session.commit()
+            db.session.add(new_user_data)
+        new_created_user = Users.query.filter_by(id=new_user_id).one_or_none()
+        if new_created_user is not None:
+            new_id = new_created_user.id
+            new_social_acc = SocialAccount(id=uuid.uuid4(),
+                                           user_id=new_id, social_id=social_id, social_name=social_name)
+            with session_scope():
+                db.session.add(new_social_acc)
+            return new_id
+        return None
+
+    @staticmethod
+    def find_user_social_acc(username: str, social_id: str, social_name: str):
+        """
+
+        :param user_id:
+        :param social_id:
+        :param social_name:
+        :param email:
+        :return:
+        """
+        user = Users.query.filter_by(username=username).one_or_none()
+        if not user:
+            return None
+        user_social = SocialAccount.query.filter_by(social_id=social_id,
+                                                    social_name=social_name, user_id=user.id).one_or_none()
+        return user_social

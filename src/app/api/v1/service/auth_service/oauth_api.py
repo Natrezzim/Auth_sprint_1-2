@@ -1,6 +1,8 @@
 from flask import Blueprint, redirect, url_for
 from flask_restx import Resource
 
+from src.app.api.v1.service.datastore.user_datastore import UserDataStore
+from src.app.db.db_models import Users
 from src.app.oauth.oauth import oauth
 
 auth = Blueprint('oauth', __name__)
@@ -28,5 +30,13 @@ class AuthorizationYandex(Resource):
         response = oauth.yandex.get('https://login.yandex.ru/info')
         response.raise_for_status()
         profile = response.json()
-        return redirect('/')
-
+        print(token)
+        print(profile)
+        user = UserDataStore.find_user_social_acc(social_id=profile['id'], social_name='yandex',
+                                                  username=profile['login'])
+        if not user:
+            UserDataStore.register_user_with_social(username=profile['login'], email=profile['default_email'],
+                                                    social_name='yandex', social_id=profile['id'])
+            return redirect('/')
+        else:
+            return {"Message:": "User already exist"}

@@ -1,5 +1,6 @@
-from src.app.api.v1.service.auth_service.oauth_api import LoginYandex, AuthorizationYandex
-from src.app.api.v1.service.auth_service.auth_api import LoginApi, RefreshAPI, RegistrationAPI, LogoutAPI, HistoryAuthAPI, ChangeAuthDataAPI
+from src.app.api.v1.service.auth_service.auth_api import (
+    ChangeAuthDataAPI, HistoryAuthAPI, LoginApi, LogoutAPI, RefreshAPI, RegistrationAPI)
+from src.app.api.v1.service.auth_service.oauth_api import AuthorizationYandex, LoginYandex
 from src.app.api.v1.service.role_service.roles_api import RolesAPI, UserRolesAPI
 
 

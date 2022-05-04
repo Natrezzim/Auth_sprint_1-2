@@ -1,8 +1,9 @@
 import logging
 import os
-from dotenv import load_dotenv
+
 import backoff
 import psycopg2
+from dotenv import load_dotenv
 
 load_dotenv("../app/config/.env")
 

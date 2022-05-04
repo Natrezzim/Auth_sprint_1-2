@@ -1,9 +1,9 @@
 import click
 from flask import Blueprint
 
-from src.app.db.db_models import Users, Role
-from src.app.api.v1.service.datastore.user_datastore import UserDataStore
 from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
+from src.app.api.v1.service.datastore.user_datastore import UserDataStore
+from src.app.db.db_models import Role, Users
 
 adm_cmd = Blueprint('adm-cmd', __name__)
 
