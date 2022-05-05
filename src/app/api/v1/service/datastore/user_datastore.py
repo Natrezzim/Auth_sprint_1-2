@@ -4,7 +4,8 @@ from secrets import choice as secrets_choice
 from typing import Optional
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from sqlalchemy import or_, update
+from sqlalchemy import update
+from werkzeug.user_agent import UserAgent
 
 from src.app.db.db import db, session_scope
 from src.app.db.db_models import AuthHistory, SocialAccount, UserPersonalData, Users
@@ -37,8 +38,10 @@ class UserDataStore:
         """
         password = password_encrypt(username, password)
         user = Users.query.filter_by(username=username, password=password).one_or_none()
+        device_type = UserAgent(user_agent)
+        device = device_type.platform if device_type.platform else 'web'
         if user is not None:
-            auth_history = AuthHistory(id=uuid.uuid4(), user_id=user.id, user_agent=user_agent)
+            auth_history = AuthHistory(id=uuid.uuid4(), user_id=user.id, user_agent=user_agent, device=device)
             with session_scope():
                 db.session.add(auth_history)
             user_id = str(user.id)

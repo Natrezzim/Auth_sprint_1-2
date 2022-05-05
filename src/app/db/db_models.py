@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
 from src.app.db.db import db
@@ -23,18 +23,40 @@ class Users(db.Model):
         return f'<Users {self.id}>'
 
 
+def create_partition(target, connection, **kw) -> None:
+    """ creating partition by user_sign_in """
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS auth_history_in_smart PARTITION OF auth_history FOR VALUES IN ('smart')"""
+    )
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS auth_history_in_mobile PARTITION OF auth_history FOR VALUES IN ('mobile')"""
+    )
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS auth_history_in_web PARTITION OF auth_history FOR VALUES IN ('web')"""
+    )
+
+
 @dataclass
 class AuthHistory(db.Model):
     __tablename__ = 'auth_history'
+    __table_args__ = (
+        UniqueConstraint("id", "device"),
+        {
+            "postgresql_partition_by": "LIST (device)",
+            "listeners": [("after_create", create_partition)],
+        },
+    )
 
     id: uuid.uuid4()
     user_id: uuid.uuid4()
     user_agent: str
+    device: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     user_agent = db.Column(db.String, nullable=False)
     auth_date = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), nullable=False)
+    device = db.Column(db.String, primary_key=True)
 
     def __repr__(self):
         return f'<AuthHistory {self.id}>'
