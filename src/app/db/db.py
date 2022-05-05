@@ -17,7 +17,7 @@ def init_db(app: Flask):
         'SQLALCHEMY_DATABASE_URI'] = \
         f'postgresql://{os.getenv("POSTGRES_USER")}:' \
         f'{os.getenv("POSTGRES_PASSWORD")}@{os.getenv("POSTGRES_HOST")}/{os.getenv("POSTGRES_DB")}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     migrate.init_app(app, db)
 

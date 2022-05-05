@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 
 from src.app.db.db import db
@@ -15,7 +15,7 @@ class Users(db.Model):
     username: str
     password: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     username = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
 
@@ -23,18 +23,39 @@ class Users(db.Model):
         return f'<Users {self.id}>'
 
 
+def create_partition(target, connection, **kw) -> None:
+    """ creating partition by user_sign_in """
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS auth_history_in_smart PARTITION OF auth_history FOR VALUES IN ('smart')"""
+    )
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS auth_history_in_mobile PARTITION OF auth_history FOR VALUES IN ('mobile')"""
+    )
+    connection.execute(
+        """CREATE TABLE IF NOT EXISTS auth_history_in_web PARTITION OF auth_history FOR VALUES IN ('web')"""
+    )
+
+
 @dataclass
 class AuthHistory(db.Model):
     __tablename__ = 'auth_history'
+    __table_args__ = (
+        {
+            'postgresql_partition_by': 'LIST (device)',
+            'listeners': [('after_create', create_partition)],
+        },
+    )
 
     id: uuid.uuid4()
     user_id: uuid.uuid4()
     user_agent: str
+    device: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     user_agent = db.Column(db.String, nullable=False)
     auth_date = db.Column(db.DateTime(timezone=True), server_default=db.func.now(), nullable=False)
+    device = db.Column(db.String, primary_key=True)
 
     def __repr__(self):
         return f'<AuthHistory {self.id}>'
@@ -48,7 +69,7 @@ class UserPersonalData(db.Model):
     user_id: uuid.uuid4()
     email: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     email = db.Column(db.String, nullable=True, unique=True)
 
@@ -64,7 +85,7 @@ class Role(db.Model):
     role_type: str
     description: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     role_type = db.Column(db.String, nullable=False, unique=True)
     description = db.Column(db.String, nullable=True)
 
@@ -80,7 +101,7 @@ class Permission(db.Model):
     permission_id: int
     description: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     permission_id = db.Column(db.Integer, nullable=False)
     description = db.Column(db.String, nullable=True)
 
@@ -96,7 +117,7 @@ class RolePermission(db.Model):
     role_id: uuid.uuid4()
     permission_id: uuid.uuid4()
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=False, nullable=False)
     permission_id = db.Column(UUID(as_uuid=True), ForeignKey("permission.id"), unique=False, nullable=False)
 
@@ -112,7 +133,7 @@ class UserRole(db.Model):
     user_id: uuid.uuid4()
     role_id: uuid.uuid4()
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=False, nullable=False)
     role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=False, nullable=False)
 
@@ -128,7 +149,7 @@ class Tokens(db.Model):
     user_id: uuid.uuid4()
     refresh_token: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
     refresh_token = db.Column(db.String, nullable=False)
 
