@@ -14,3 +14,4 @@ authlib==1.0.1
 requests==2.27.1
 Werkzeug==2.1.2
 SQLAlchemy==1.4.9
+redis==4.2.2

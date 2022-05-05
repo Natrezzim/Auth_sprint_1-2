@@ -11,7 +11,7 @@ build:
 up:
 	docker-compose -f ${DOCKER_PROD} up -d
 build_up: build up
-	docker-compose exec service sh -c "python /usr/src/app/utils/wait_for_pg.py
+	docker-compose exec service sh -c "python /usr/src/app/utils/wait_for_pg.py && python /usr/src/app/utils/wait_for_redis.py"
 start:
 	docker-compose -f ${DOCKER_PROD} start
 down:
@@ -27,7 +27,7 @@ restart:
 	docker-compose -f ${DOCKER_PROD} stop
 	docker-compose -f ${DOCKER_PROD} up -d
 first_start: build_up
-	docker-compose exec service sh -c "python -m flask db migrate  && sleep 5 && python -m flask db upgrade  && sleep 5"
+	docker-compose exec service sh -c "python -m flask db upgrade  && sleep 5"
 
 
 
