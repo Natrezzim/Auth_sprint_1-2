@@ -15,7 +15,7 @@ class Users(db.Model):
     username: str
     password: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     username = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
 
@@ -40,10 +40,9 @@ def create_partition(target, connection, **kw) -> None:
 class AuthHistory(db.Model):
     __tablename__ = 'auth_history'
     __table_args__ = (
-        UniqueConstraint("id", "device"),
         {
-            "postgresql_partition_by": "LIST (device)",
-            "listeners": [("after_create", create_partition)],
+            'postgresql_partition_by': 'LIST (device)',
+            'listeners': [('after_create', create_partition)],
         },
     )
 
@@ -70,7 +69,7 @@ class UserPersonalData(db.Model):
     user_id: uuid.uuid4()
     email: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     email = db.Column(db.String, nullable=True, unique=True)
 
@@ -86,7 +85,7 @@ class Role(db.Model):
     role_type: str
     description: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     role_type = db.Column(db.String, nullable=False, unique=True)
     description = db.Column(db.String, nullable=True)
 
@@ -102,7 +101,7 @@ class Permission(db.Model):
     permission_id: int
     description: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     permission_id = db.Column(db.Integer, nullable=False)
     description = db.Column(db.String, nullable=True)
 
@@ -118,7 +117,7 @@ class RolePermission(db.Model):
     role_id: uuid.uuid4()
     permission_id: uuid.uuid4()
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=False, nullable=False)
     permission_id = db.Column(UUID(as_uuid=True), ForeignKey("permission.id"), unique=False, nullable=False)
 
@@ -134,7 +133,7 @@ class UserRole(db.Model):
     user_id: uuid.uuid4()
     role_id: uuid.uuid4()
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=False, nullable=False)
     role_id = db.Column(UUID(as_uuid=True), ForeignKey("role.id"), unique=False, nullable=False)
 
@@ -150,7 +149,7 @@ class Tokens(db.Model):
     user_id: uuid.uuid4()
     refresh_token: str
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
     refresh_token = db.Column(db.String, nullable=False)
 
