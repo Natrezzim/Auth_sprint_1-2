@@ -31,7 +31,7 @@ flask adm-cmd create-superuser "yourusername" "yourpassword"
 Flask доступен по адресу http://127.0.0.1:80/  
 Документация http://127.0.0.1:80/doc/     
 API http://127.0.0.1:80/api/v1/  
-PostgreSQL доступна снаружи для разработки временно
+Jaeger http://127.0.0.1:16686/
 
 Таблицы
 -
