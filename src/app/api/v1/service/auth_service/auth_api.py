@@ -252,7 +252,6 @@ class Totp2FALogin(Resource):
 
     @staticmethod
     def post():
-        headers = {'Content-Type': 'text/html'}
         body = request.args
         if not UserDataStore.check_user_totp(user_id=body['user_id']).verified:
             redirect('/')
@@ -262,7 +261,7 @@ class Totp2FALogin(Resource):
         totp = pyotp.TOTP(secret)
 
         if not totp.verify(code):
-            return make_response(check_totp_tmpl.format(message='неверный код', user_id=body['user_id'])), 200, headers
+            return {"message": "wrong code"}
 
-        return make_response(check_totp_tmpl.format(message='верный код', user_id=body['user_id'])), 200, headers
+        return redirect('/')
 

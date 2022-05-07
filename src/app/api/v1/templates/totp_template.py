@@ -29,7 +29,7 @@ check_totp_tmpl = '''
 <body>
 <p>{message}</p>
 <p>Input your code from TOTP-app</p>
-<form method="post" action="?{user_id}">
+<form method="post" action="?user_id={user_id}">
     <input required name="code">
     <button type="submit">Synchronising</button>
 </form>
