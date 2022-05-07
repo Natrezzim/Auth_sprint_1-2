@@ -4,6 +4,7 @@ WORKDIR /usr
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PYTHONPATH="${PYTHONPATH}:/src"
 RUN apk update && \
     apk add build-base && \
     apk --no-cache add curl && \
