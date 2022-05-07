@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "JSON schema for login User",
+  "type": "object",
+  "properties": {
+    "history": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "user_id": {"type":  "number"},
+        "user_agent": {"type":  "string"},
+        "auth_date": {"type":  "string"}
+      }
+    }
+  },
+  "required": ["message", "access_token", "access_token"]
+}

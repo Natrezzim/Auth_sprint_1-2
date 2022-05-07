@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "JSON schema for login User",
+  "type": "object",
+  "properties": {
+    "access_token": {"type": "string"},
+    "refresh_token": {"type": "string"},
+    "message": {"type": "string"}
+  },
+  "required": ["message", "access_token", "access_token"]
+}

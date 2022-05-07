@@ -4,17 +4,30 @@ services:
     container_name: auth_service
     build:
       context: src
-      dockerfile: ./app/Dockerfile
+      dockerfile: ./rest/Dockerfile
     environment:
-      - FLASK_APP=src/app/app.py
+      - FLASK_APP=src/rest/app.py
     entrypoint: >
       sh -c "python -m flask run --host 0.0.0.0 --port 8000 --debugger"
     expose:
       - "8000"
     env_file:
-      - ./src/app/config/.env
+      - ./src/rest/config/.env
     depends_on:
       - db
+
+  auth_grpc:
+    container_name: auth_grpc
+    build:
+      context: src
+      dockerfile: ./grpc_api/Dockerfile
+    entrypoint: >
+      sh -c "python src/grpc_api/main.py"
+    expose:
+      - "50051"
+    depends_on:
+      - db
+      - service
 
   nginx:
     container_name: nginx
@@ -22,7 +35,7 @@ services:
       context: ./src/nginx
       dockerfile: ./Dockerfile
     ports:
-      - "80:80"
+      - "80:8080"
     depends_on:
       - service
 
@@ -48,9 +61,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
-      - ./src/app/config/.env
+      - ./src/rest/config/.env
 
 volumes:
   postgres_data:
 
-
+# sleep 10000 &&
