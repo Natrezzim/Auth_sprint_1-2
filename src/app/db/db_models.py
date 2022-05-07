@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import expression
 
 from src.app.db.db import db
 
@@ -176,3 +177,19 @@ class SocialAccount(db.Model):
 
     def __repr__(self):
         return f'<SocialAccount {self.social_name}:{self.user_id}>'
+
+@dataclass
+class UsersSercrestsTotp(db.Model):
+
+    id: uuid.uuid4()
+    user_id: uuid.uuid4()
+    secret: str
+    verified: bool
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), unique=True, nullable=False)
+    secret = db.Column(db.Text, nullable=False)
+    verified = db.Column(db.Boolean, server_default=expression.false(), nullable=False)
+
+    def __repr__(self):
+        return f'<SocialAccount {self.user_id}>'

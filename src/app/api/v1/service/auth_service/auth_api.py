@@ -2,14 +2,16 @@ import datetime
 import os
 from http import HTTPStatus
 
-from flask import Blueprint, jsonify, request
+import pyotp
+from flask import Blueprint, jsonify, request, make_response, redirect
 from flask_restx import Namespace, Resource, fields, reqparse
 
+from src.app.api.v1.templates.totp_template import totp_sync_template, check_totp_tmpl
 from src.app.api.v1.service.check_user import CheckAuthUser
 from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
 from src.app.api.v1.service.datastore.token_datastore import TokenDataStore
 from src.app.api.v1.service.datastore.user_datastore import UserDataStore
-from src.app.db.db_models import Tokens, UserRole, Users
+from src.app.db.db_models import Tokens, Users
 from src.app.utils.pagination import get_paginated_list
 
 auth = Blueprint('auth', __name__)
@@ -82,6 +84,7 @@ class LoginApi(Resource):
         for role in RolesCRUD.check_user_role(user_id):
             if role.role_type == 'superuser':
                 superuser = True
+
         access_token = TokenDataStore.create_jwt_token(
             username=body["username"], password=body["password"], user_id=user_id, expires_delta=EXPIRE_ACCESS,
             secret_key=SECRET_KEY, admin=superuser)
@@ -199,3 +202,67 @@ class ChangeAuthDataAPI(Resource):
             return jsonify({"history": UserDataStore.get_user_history_auth(user_id=access_data['user_id'])})
         UserDataStore.change_user(user_id=access_data["user_id"], new_username=body["new_username"],
                                   new_password=body["new_password"])
+
+
+@auth_namespace.doc(params={'user_id': 'user_id'})
+class Totp2FA(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('user_id', type=str, help="user_id")
+
+    @staticmethod
+    def get():
+        headers = {'Content-Type': 'text/html'}
+        body = request.args
+        secret = pyotp.random_base32()
+        totp = pyotp.TOTP(secret)
+        user_info = UserDataStore.get_user_info(user_id=body['user_id'])
+        provisioning_url = totp.provisioning_uri(name=user_info.username, issuer_name='Online Movies')
+        tmpl = totp_sync_template % (provisioning_url, body['user_id'])
+        if UserDataStore.check_user_totp(user_id=body['user_id']):
+            return redirect(f"/api/v1/login/totp/login?user_id={body['user_id']}")
+        UserDataStore.add_totp_user(user_id=body['user_id'], secret=secret, verified=False)
+        return make_response(tmpl, 200, headers)
+
+    @staticmethod
+    def post():
+        body = request.args
+        secret = UserDataStore.check_user_totp(user_id=body['user_id']).secret
+        print(secret)
+        totp = pyotp.TOTP(secret)
+        code = request.form['code']
+        if not totp.verify(code):
+            return 'Неверный код'
+        else:
+            UserDataStore.set_totp_verifiy(user_id=body['user_id'])
+        return redirect(f"/api/v1/login/totp/login?user_id={body['user_id']}")
+
+
+@auth_namespace.doc(params={'user_id': 'user_id'})
+class Totp2FALogin(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('user_id', type=str, help="user_id")
+
+    @staticmethod
+    def get():
+        headers = {'Content-Type': 'text/html'}
+        body = request.args
+        if not UserDataStore.check_user_totp(user_id=body['user_id']).verified:
+            redirect('/')
+        return make_response(check_totp_tmpl.format(message='', user_id=body['user_id']), 200, headers)
+
+    @staticmethod
+    def post():
+        headers = {'Content-Type': 'text/html'}
+        body = request.args
+        if not UserDataStore.check_user_totp(user_id=body['user_id']).verified:
+            redirect('/')
+
+        code = request.form['code']
+        secret = UserDataStore.check_user_totp(user_id=body['user_id']).secret
+        totp = pyotp.TOTP(secret)
+
+        if not totp.verify(code):
+            return make_response(check_totp_tmpl.format(message='неверный код', user_id=body['user_id'])), 200, headers
+
+        return make_response(check_totp_tmpl.format(message='верный код', user_id=body['user_id'])), 200, headers
+

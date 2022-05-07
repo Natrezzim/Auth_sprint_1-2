@@ -8,7 +8,7 @@ from sqlalchemy import update
 from werkzeug.user_agent import UserAgent
 
 from src.app.db.db import db, session_scope
-from src.app.db.db_models import AuthHistory, SocialAccount, UserPersonalData, Users
+from src.app.db.db_models import AuthHistory, SocialAccount, UserPersonalData, Users, UsersSercrestsTotp
 
 
 def password_encrypt(username: str, password: str):
@@ -173,3 +173,35 @@ class UserDataStore:
         user_social = SocialAccount.query.filter_by(social_id=social_id,
                                                     social_name=social_name, user_id=user.id).one_or_none()
         return user_social
+
+    @staticmethod
+    def get_user_info(user_id: str):
+        """
+
+        :param user_id:
+        :return: user
+        """
+        user = Users.query.filter_by(id=user_id).one_or_none()
+        return user
+
+    @staticmethod
+    def add_totp_user(user_id: str, secret: str, verified: bool):
+        """
+
+        :param user_id:
+        :param secret:
+        :param verified:
+        """
+        new_secret = UsersSercrestsTotp(id=uuid.uuid4(), user_id=user_id, secret=secret, verified=verified)
+        with session_scope():
+            db.session.add(new_secret)
+
+    @staticmethod
+    def set_totp_verifiy(user_id: str):
+        with session_scope():
+            UsersSercrestsTotp.query.filter_by(user_id=user_id).update({'verified': True})
+
+    @staticmethod
+    def check_user_totp(user_id: str):
+        user_totp = UsersSercrestsTotp.query.filter_by(user_id=user_id).one_or_none()
+        return user_totp
