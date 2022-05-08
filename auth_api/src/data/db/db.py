@@ -1,0 +1,48 @@
+import os
+from contextlib import contextmanager
+from pathlib import Path
+
+from dotenv import load_dotenv
+from flask import Flask
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+load_dotenv(f"{Path(os.getcwd())}/src/config/.env")
+print(f"{Path(os.getcwd())}/src/config/.env")
+print(os.getenv("POSTGRES_USER"))
+
+db = SQLAlchemy()
+migrate = Migrate()
+
+
+def init_db(app: Flask):
+    app.config[
+        'SQLALCHEMY_DATABASE_URI'] = \
+        f'postgresql://{os.getenv("POSTGRES_USER")}:' \
+        f'{os.getenv("POSTGRES_PASSWORD")}@{os.getenv("POSTGRES_HOST")}/{os.getenv("POSTGRES_DB")}'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+@contextmanager
+def session_db():
+    print(os.getenv("POSTGRES_USER"))
+    engine = create_engine(f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
+                           f"{os.getenv('POSTGRES_HOST')}/{os.getenv('POSTGRES_DB')}")
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    yield session
+    session.close()
+
+
+
+@contextmanager
+def session_scope():
+    try:
+        yield db.session
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise

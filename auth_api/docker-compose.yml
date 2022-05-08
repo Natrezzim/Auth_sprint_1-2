@@ -1,0 +1,70 @@
+services:
+
+  service:
+    container_name: auth_service
+    build:
+      context: src
+      dockerfile: ./rest/Dockerfile
+    environment:
+      - FLASK_APP=src/rest/app.py
+    entrypoint: >
+      sh -c "python -m flask run --host 0.0.0.0 --port 8000 --debugger"
+    expose:
+      - "8000"
+    env_file:
+      - ./src/rest/config/.env
+    depends_on:
+      - db
+
+  auth_grpc:
+    container_name: auth_grpc
+    build:
+      context: src
+      dockerfile: ./grpc_api/Dockerfile
+    entrypoint: >
+      sh -c "python src/grpc_api/main.py"
+    expose:
+      - "50051"
+    depends_on:
+      - db
+      - service
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./src/nginx
+      dockerfile: ./Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - service
+      - auth_grpc
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+
+  redis:
+    container_name: redis
+    build:
+      context: ./src/redis
+      dockerfile: ./Dockerfile
+    depends_on:
+      - service
+    ports:
+      - "6379:6379"
+
+  db:
+    container_name: db_postgres
+    image: postgres:14.2
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./src/rest/config/.env
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,95 @@
+services:
+
+  service:
+    container_name: django_service
+    build:
+      context: ./src/online_cinema
+      dockerfile: ./app/Dockerfile
+    command: "python app/manage.py runserver 0.0.0.0:8000"
+    expose:
+      - "8000"
+    volumes:
+      - static_volume:/usr/src/app/static
+    env_file:
+      - ./src/online_cinema/app/config/.env
+    depends_on:
+      - db
+
+  db:
+    container_name: db_postgres
+    image: postgres:14.2
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+      - ./src/online_cinema/app/sqlscript/movies_schema.sql:/docker-entrypoint-initdb.d/movies_schema.sql
+    env_file:
+      - ./src/online_cinema/app/config/.env
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./src/online_cinema/nginx
+      dockerfile: ./Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/home/app/static
+    depends_on:
+      - service
+
+  es:
+    container_name: elastic
+    image: elasticsearch:7.7.0
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+  esloader:
+    container_name: esloader
+    build:
+      context: ./src/online_cinema/postgres_to_elastic
+      dockerfile: ./Dockerfile
+    depends_on:
+      - db
+      - es
+      - service
+
+  redis:
+    container_name: redis
+    build:
+      context: ./src/online_cinema/redis
+      dockerfile: ./Dockerfile
+    depends_on:
+      - db
+      - es
+      - service
+    ports:
+      - "6379:6379"
+
+  search_api:
+    container_name: search_api
+    build:
+      context: ./src/search_api
+      dockerfile: ./Dockerfile
+    ports:
+      - "8010:8010"
+    env_file:
+      - ./src/search_api/app/.env
+    depends_on:
+      - db
+      - es
+      - service
+      - redis
+
+volumes:
+  postgres_data:
+  static_volume:
+  esdata:

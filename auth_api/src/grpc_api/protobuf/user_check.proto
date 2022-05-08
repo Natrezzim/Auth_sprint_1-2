@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package checkuser;
+
+enum RoleUser {
+    ADMIN = 0;
+    USER = 1;
+}
+
+message CheckUserRequest {
+    string access_token = 1;
+}
+
+message CheckUser {
+    bool status = 1;
+    message RoleItems {
+        string id = 1;
+    }
+    repeated RoleItems roles = 2;
+}
+
+service CheckAuthUser {
+    rpc GetAuthInfo (CheckUserRequest) returns (CheckUser) {}
+}
