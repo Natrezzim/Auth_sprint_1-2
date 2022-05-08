@@ -1,5 +1,5 @@
 from src.app.api.v1.service.auth_service.auth_api import (
-    ChangeAuthDataAPI, HistoryAuthAPI, LoginApi, LogoutAPI, RefreshAPI, RegistrationAPI)
+    ChangeAuthDataAPI, HistoryAuthAPI, LoginApi, LogoutAPI, RefreshAPI, RegistrationAPI, Totp2FA, Totp2FALogin)
 from src.app.api.v1.service.auth_service.oauth_api import AuthorizationYandex, LoginYandex
 from src.app.api.v1.service.role_service.roles_api import RolesAPI, UserRolesAPI
 
@@ -15,3 +15,5 @@ def initialize_routes(api):
     api.add_resource(UserRolesAPI, '/api/v1/user-roles')
     api.add_resource(LoginYandex, '/api/v1/login/yandex')
     api.add_resource(AuthorizationYandex, '/api/v1/login/yandex/authorize')
+    api.add_resource(Totp2FA, '/api/v1/login/totp')
+    api.add_resource(Totp2FALogin, '/api/v1/login/totp/login')
