@@ -5,8 +5,10 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_restx import Api
+from flask_qrcode import QRcode
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
+from src.app.miscellaneous.xcaptcha_config import init_captcha
 from src.app.miscellaneous.jaeger import init_jaeger
 from src.app.miscellaneous.jaeger_config import configure_tracer
 from src.app.miscellaneous.rate_limit import init_rate_limit
@@ -29,7 +31,7 @@ api = Api(app, version='1.0', title='Auth API',
 app.config["SECRET_KEY"] = '3212gregbergqfwwe'
 
 app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY')
-
+QRcode(app)
 init_db(app)
 init_oauth(app)
 initialize_routes(api)
@@ -42,6 +44,7 @@ init_rate_limit(app)
 init_jaeger(app)
 configure_tracer()
 FlaskInstrumentor().instrument_app(app)
+init_captcha(app)
 
 if __name__ == '__main__':
     app.run()

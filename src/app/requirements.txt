@@ -21,3 +21,6 @@ opentelemetry-exporter-jaeger==1.11.1
 opentelemetry-instrumentation-flask==0.30b1
 pyotp==2.6.0
 python-multipart==0.0.5
+Flask-xCaptcha==0.5.2
+Jinja2==3.0.0
+Flask-QRcode==3.0.0
