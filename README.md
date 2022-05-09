@@ -7,8 +7,6 @@
 
 **make first_start**
 - Применяет миграции  
-flask init  
-flask migrate  
 flask upgrade  
 
 Все комманды make  
@@ -17,10 +15,7 @@ flask upgrade
 
 Миграция локально
 -
-
-1) python -m flask init
-2) python -m flask migrate
-3) python -m flask upgrade
+python -m flask upgrade
 
 CLI комманды
 -
