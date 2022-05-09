@@ -8,18 +8,16 @@ services:
     environment:
       - FLASK_APP=src/rest/app.py
     entrypoint: >
-      sh -c "python -m flask run --host 0.0.0.0 --port 8000 --debugger"
+      sh -c "python -m flask run --host 0.0.0.0 --port 8001 --debugger"
     expose:
-      - "8000"
+      - "8001"
     env_file:
       - ./src/config/.env
     depends_on:
       - db
-    networks:
-      - default
 
   auth_grpc:
-    container_name: auth_grpc
+    container_name: grpc_auth
     build:
       context: src
       dockerfile: ./grpc_api/Dockerfile
@@ -32,8 +30,6 @@ services:
     depends_on:
       - db
       - service
-    networks:
-      - default
 
   nginx:
     container_name: nginx_auth
@@ -41,28 +37,27 @@ services:
       context: ./src/nginx
       dockerfile: ./Dockerfile
     ports:
-      - "8080:80"
+      - "8090:8090"
     depends_on:
       - service
       - auth_grpc
-    networks:
-      - default
 
   jaeger:
+    container_name: jaeger_auth
     image: jaegertracing/all-in-one:latest
     ports:
       - "6831:6831/udp"
       - "16686:16686"
 
   redis:
-    container_name: redis
+    container_name: redis_auth
     build:
       context: ./src/redis
       dockerfile: ./Dockerfile
     depends_on:
       - service
     ports:
-      - "6379:6379"
+      - "6380:6380"
 
   db:
     container_name: db_auth
@@ -76,9 +71,3 @@ services:
 
 volumes:
   postgres_data:
-
-
-networks:
-  default:
-    external:
-      name: movies_network

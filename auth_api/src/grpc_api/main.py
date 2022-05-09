@@ -1,7 +1,6 @@
 from concurrent import futures
 from protobuf import user_check_pb2_grpc
 from src.grpc_api.services.check_auth import CheckAuthService
-from src.data.db import db
 
 import grpc
 

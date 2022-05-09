@@ -16,7 +16,6 @@ from src.rest.api.v1.service.auth_service.auth_api import auth, auth_namespace
 from src.rest.api.v1.service.role_service.cli_commands import adm_cmd
 from src.rest.api.v1.service.role_service.roles_api import role_namespace, roles
 from src.data.db.db import init_db
-from src.data.db.db_models import db
 from src.rest.oauth.oauth import init_oauth
 
 load_dotenv(f'{os.getcwd()}/.env')

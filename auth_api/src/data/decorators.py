@@ -2,7 +2,6 @@ import os
 from functools import wraps
 
 from flask import request
-from flask_restx import reqparse
 
 from src.data.datastore.token_datastore import TokenDataStore
 

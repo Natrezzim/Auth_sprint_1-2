@@ -14,8 +14,6 @@ services:
       - ./src/online_cinema/app/config/.env
     depends_on:
       - db
-    networks:
-      - default
 
   db:
     container_name: db_movie
@@ -34,13 +32,11 @@ services:
       context: ./src/online_cinema/nginx
       dockerfile: ./Dockerfile
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - static_volume:/home/app/static
     depends_on:
       - service
-    networks:
-      - default
 
   es:
     container_name: elastic
@@ -79,8 +75,6 @@ services:
       - service
     ports:
       - "6379:6379"
-    networks:
-      - default
 
   search_api:
     container_name: search_api
@@ -96,15 +90,8 @@ services:
       - es
       - service
       - redis
-    networks:
-      - default
 
 volumes:
   postgres_data:
   static_volume:
   esdata:
-
-networks:
-  default:
-    external:
-      name: movies_network
