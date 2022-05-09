@@ -14,7 +14,7 @@ message CheckUserRequest {
 message CheckUser {
     bool status = 1;
     message RoleItems {
-        string id = 1;
+        string type = 1;
     }
     repeated RoleItems roles = 2;
 }

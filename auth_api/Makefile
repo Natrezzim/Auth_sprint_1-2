@@ -11,7 +11,7 @@ build:
 up:
 	docker-compose -f ${DOCKER_PROD} up -d
 build_up: build up
-	docker-compose exec service sh -c "python /usr/src/app/utils/wait_for_pg.py && python /usr/src/app/utils/wait_for_redis.py"
+	docker-compose exec service sh -c "python /usr/src/rest/utils/wait_for_pg.py"
 start:
 	docker-compose -f ${DOCKER_PROD} start
 down:

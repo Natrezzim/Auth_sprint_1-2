@@ -2,12 +2,15 @@ import uuid
 from http import HTTPStatus
 from typing import Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Header
 from pydantic import BaseModel
 
-from src.search_api.app.services.films import FilmService, get_film_service
+from search_api.app.services.films import FilmService, get_film_service
+from search_api.grpc_inegration.client.services import role_required
 
 router = APIRouter()
+
+ROLE_PERMISSION = "admin"
 
 
 class Film(BaseModel):
@@ -25,7 +28,6 @@ class Film(BaseModel):
 async def film_details(film_id: str, film_service: FilmService = Depends(get_film_service)) -> Film:
     """
         Информация о фильме:
-
         - **id**: ID фильма
         - **imdb_rating**: IMDB рейтинг
         - **genre**: жанр фиьма
@@ -44,8 +46,9 @@ async def film_details(film_id: str, film_service: FilmService = Depends(get_fil
 
 
 @router.get('/', summary="Вывод всех имеющихся фильмов")
-async def all_films(film_service: FilmService = Depends(get_film_service), limit: int = 10,
-                    genre: Optional[str] = None, actor: Optional[str] = None, sort: Optional[str] = None) -> Dict:
+async def all_films(roles=Depends(role_required), film_service: FilmService = Depends(get_film_service),
+                    limit: int = 10, genre: Optional[str] = None, actor: Optional[str] = None,
+                    sort: Optional[str] = None) -> Dict:
     """
         Информация о фильме:
 
@@ -58,6 +61,8 @@ async def all_films(film_service: FilmService = Depends(get_film_service), limit
         - **actors**: актеры принявшие участие в фильме
         - **writers**: сценаристы
     """
+    if 'admin' not in roles:
+        raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail='Permission denied')
     films = await film_service.get_all_films(limit=limit, genre=genre, actor=actor, sort=sort)
     if not films:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='films not found')

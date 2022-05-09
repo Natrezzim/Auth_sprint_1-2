@@ -38,8 +38,8 @@ class CheckAuthService(user_check_pb2_grpc.CheckAuthUserServicer, CheckAuthData)
             context.abort(grpc.StatusCode.UNAUTHENTICATED, "access_token not valid")
         else:
             # Проверяем время жизни токена
-            if not self.check_token_expired(exp=token_data["expires"]):
-                context.abort(grpc.StatusCode.UNAUTHENTICATED, "expired token")
+            # if not self.check_token_expired(exp=token_data["expires"]):
+            #     context.abort(grpc.StatusCode.UNAUTHENTICATED, "expired token")
             with session_db() as s:
                 records = s.query(UserRole, Role).filter(
                     UserRole.user_id == token_data["user_id"],
@@ -48,12 +48,10 @@ class CheckAuthService(user_check_pb2_grpc.CheckAuthUserServicer, CheckAuthData)
             check_user.status = 1
             if not records:
                 try:
-                    item = check_user.todos.add()
-                    item.id = []
+                    check_user.roles.append([])
                     return check_user
                 except Exception as e:
                     print(e)
-                for user_role, role in records:
-                    items = check_user.todos.add()
-                    items.id = role.id
-                return check_user
+            for user_role, role in records:
+                check_user.roles.append(role.role_type)
+            return check_user

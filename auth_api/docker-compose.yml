@@ -12,9 +12,11 @@ services:
     expose:
       - "8000"
     env_file:
-      - ./src/rest/config/.env
+      - ./src/config/.env
     depends_on:
       - db
+    networks:
+      - default
 
   auth_grpc:
     container_name: auth_grpc
@@ -23,22 +25,28 @@ services:
       dockerfile: ./grpc_api/Dockerfile
     entrypoint: >
       sh -c "python src/grpc_api/main.py"
-    expose:
-      - "50051"
+    env_file:
+      - ./src/config/.env
+    ports:
+      - "50051:50051"
     depends_on:
       - db
       - service
+    networks:
+      - default
 
   nginx:
-    container_name: nginx
+    container_name: nginx_auth
     build:
       context: ./src/nginx
       dockerfile: ./Dockerfile
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - service
       - auth_grpc
+    networks:
+      - default
 
   jaeger:
     image: jaegertracing/all-in-one:latest
@@ -57,14 +65,20 @@ services:
       - "6379:6379"
 
   db:
-    container_name: db_postgres
+    container_name: db_auth
     image: postgres:14.2
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
-      - ./src/rest/config/.env
+      - ./src/config/.env
     ports:
-      - "5432:5432"
+      - "5431:5432"
 
 volumes:
   postgres_data:
+
+
+networks:
+  default:
+    external:
+      name: movies_network

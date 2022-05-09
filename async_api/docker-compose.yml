@@ -14,15 +14,19 @@ services:
       - ./src/online_cinema/app/config/.env
     depends_on:
       - db
+    networks:
+      - default
 
   db:
-    container_name: db_postgres
+    container_name: db_movie
     image: postgres:14.2
     volumes:
       - postgres_data:/var/lib/postgresql/data/
       - ./src/online_cinema/app/sqlscript/movies_schema.sql:/docker-entrypoint-initdb.d/movies_schema.sql
     env_file:
       - ./src/online_cinema/app/config/.env
+    ports:
+      - "5432:5432"
 
   nginx:
     container_name: nginx
@@ -30,11 +34,13 @@ services:
       context: ./src/online_cinema/nginx
       dockerfile: ./Dockerfile
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - static_volume:/home/app/static
     depends_on:
       - service
+    networks:
+      - default
 
   es:
     container_name: elastic
@@ -73,6 +79,8 @@ services:
       - service
     ports:
       - "6379:6379"
+    networks:
+      - default
 
   search_api:
     container_name: search_api
@@ -88,8 +96,15 @@ services:
       - es
       - service
       - redis
+    networks:
+      - default
 
 volumes:
   postgres_data:
   static_volume:
   esdata:
+
+networks:
+  default:
+    external:
+      name: movies_network

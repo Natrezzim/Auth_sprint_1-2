@@ -10,8 +10,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 load_dotenv(f"{Path(os.getcwd())}/src/config/.env")
-print(f"{Path(os.getcwd())}/src/config/.env")
-print(os.getenv("POSTGRES_USER"))
 
 db = SQLAlchemy()
 migrate = Migrate()

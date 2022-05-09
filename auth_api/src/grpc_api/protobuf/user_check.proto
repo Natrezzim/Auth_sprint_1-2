@@ -13,10 +13,7 @@ message CheckUserRequest {
 
 message CheckUser {
     bool status = 1;
-    message RoleItems {
-        string id = 1;
-    }
-    repeated RoleItems roles = 2;
+    repeated string roles = 2;
 }
 
 service CheckAuthUser {

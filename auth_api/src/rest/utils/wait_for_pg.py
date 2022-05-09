@@ -1,11 +1,13 @@
 import logging
 import os
+from pathlib import Path
 
 import backoff
 import psycopg2
 from dotenv import load_dotenv
 
-load_dotenv("../app/config/.env")
+load_dotenv(f"{Path(os.getcwd())}/src/config/.env")
+print(f"TESTTEST", os.getenv('POSTGRES_DB'))
 
 logging.getLogger('backoff').addHandler(logging.StreamHandler())
 
@@ -13,7 +15,8 @@ dsl = {
     'dbname': os.getenv('POSTGRES_DB'),
     'user': os.getenv('POSTGRES_USER'),
     'password': os.getenv('POSTGRES_PASSWORD'),
-    'host': os.getenv('POSTGRES_HOST')
+    'host': os.getenv('POSTGRES_HOST'),
+    'port': os.getenv('POSTGRES_PORT')
 }
 
 
