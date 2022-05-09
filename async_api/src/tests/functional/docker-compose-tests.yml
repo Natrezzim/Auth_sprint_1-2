@@ -1,0 +1,60 @@
+services:
+
+  es:
+    container_name: elastic_test
+    image: elasticsearch:7.7.0
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+  redis:
+    container_name: redis_test
+    build:
+      context: ../../online_cinema/redis
+      dockerfile: ./Dockerfile
+    depends_on:
+      - es
+    ports:
+      - "6379:6379"
+
+  search_api:
+    container_name: search_api_test
+    build:
+      context: ../../search_api
+      dockerfile: ./Dockerfile
+    ports:
+      - "8010:8010"
+    env_file:
+      - ../../search_api/app/.env
+    depends_on:
+      - es
+      - redis
+
+  tests:
+    container_name: tests
+    build:
+      context: ../../
+      dockerfile: ./tests/functional/Dockerfile
+    entrypoint: > 
+      sh -c "python tests/functional/utils/wait_for_es.py
+      && python tests/functional/utils/wait_for_redis.py
+      && sh /usr/src/tests/functional/testdata/create_elastic_schema.sh
+      && python -m pytest /usr/src/tests/functional/src -k all_tests --asyncio-mode=auto"
+    env_file:
+      - ../../tests/functional/.env
+    depends_on:
+      - es
+      - redis
+      - search_api
+
+volumes:
+  esdata:
