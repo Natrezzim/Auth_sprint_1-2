@@ -9,10 +9,11 @@ from dotenv import load_dotenv
 
 load_dotenv(f'{os.getcwd()}/search_api/app/.env')
 
+
 class CheckUsergRPCServices:
 
-    GRPC_HOST = os.getenv("GRPC_HOST")
-    GRPC_PORT = os.getenv("GRPC_PORT")
+    GRPC_HOST = "127.0.0.1"
+    GRPC_PORT = "50051"
 
     @staticmethod
     def check_user_permission(token: str):
