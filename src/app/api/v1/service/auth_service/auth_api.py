@@ -3,10 +3,10 @@ import os
 from http import HTTPStatus
 
 import pyotp
-from flask import Blueprint, jsonify, request, make_response, redirect
+from flask import Blueprint, jsonify, request, make_response, redirect, render_template
 from flask_restx import Namespace, Resource, fields, reqparse
 
-from src.app.api.v1.templates.totp_template import totp_sync_template, check_totp_tmpl
+from src.app.miscellaneous.xcaptcha_config import xcaptcha
 from src.app.api.v1.service.check_user import CheckAuthUser
 from src.app.api.v1.service.datastore.roles_datastore import RolesCRUD
 from src.app.api.v1.service.datastore.token_datastore import TokenDataStore
@@ -209,32 +209,35 @@ class Totp2FA(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument('user_id', type=str, help="user_id")
 
-    @staticmethod
-    def get():
+    secret = pyotp.random_base32()
+
+    def get(self):
         headers = {'Content-Type': 'text/html'}
         body = request.args
-        secret = pyotp.random_base32()
-        totp = pyotp.TOTP(secret)
+        totp = pyotp.TOTP(self.secret)
         user_info = UserDataStore.get_user_info(user_id=body['user_id'])
         provisioning_url = totp.provisioning_uri(name=user_info.username, issuer_name='Online Movies')
-        tmpl = totp_sync_template % (provisioning_url, body['user_id'])
         if UserDataStore.check_user_totp(user_id=body['user_id']):
             return redirect(f"/api/v1/login/totp/login?user_id={body['user_id']}")
-        UserDataStore.add_totp_user(user_id=body['user_id'], secret=secret, verified=False)
-        return make_response(tmpl, 200, headers)
 
-    @staticmethod
-    def post():
+        return make_response(render_template('sync.html', url=provisioning_url, user_id=body['user_id']), 200,
+                                 headers)
+
+    def post(self):
+        headers = {'Content-Type': 'text/html'}
         body = request.args
+        if xcaptcha.verify():
+            UserDataStore.add_totp_user(user_id=body['user_id'], secret=self.secret, verified=False)
+        else:
+            return make_response(render_template('robot.html'), 404, headers)
         secret = UserDataStore.check_user_totp(user_id=body['user_id']).secret
-        print(secret)
         totp = pyotp.TOTP(secret)
-        code = request.form['code']
+        code = request.form.get('code')
         if not totp.verify(code):
-            return 'Неверный код'
+            return {'message': "wrong code"}
         else:
             UserDataStore.set_totp_verifiy(user_id=body['user_id'])
-        return redirect(f"/api/v1/login/totp/login?user_id={body['user_id']}")
+            return redirect(f"/api/v1/login/totp/login?user_id={body['user_id']}")
 
 
 @auth_namespace.doc(params={'user_id': 'user_id'})
@@ -248,20 +251,20 @@ class Totp2FALogin(Resource):
         body = request.args
         if not UserDataStore.check_user_totp(user_id=body['user_id']).verified:
             redirect('/')
-        return make_response(check_totp_tmpl.format(message='', user_id=body['user_id']), 200, headers)
+        return make_response(render_template('check.html', message='', user_id=body['user_id']), 200, headers)
 
     @staticmethod
     def post():
         body = request.args
+        headers = {'Content-Type': 'text/html'}
         if not UserDataStore.check_user_totp(user_id=body['user_id']).verified:
             redirect('/')
 
-        code = request.form['code']
+        code = request.form.get('code')
         secret = UserDataStore.check_user_totp(user_id=body['user_id']).secret
         totp = pyotp.TOTP(secret)
 
         if not totp.verify(code):
-            return {"message": "wrong code"}
+            return make_response(render_template('check.html', message='wrong code', user_id=body['user_id']), 200, headers)
 
         return redirect('/')
-
