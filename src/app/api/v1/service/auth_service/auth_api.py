@@ -224,11 +224,12 @@ class Totp2FA(Resource):
                                  headers)
 
     def post(self):
+        headers = {'Content-Type': 'text/html'}
         body = request.args
         if xcaptcha.verify():
             UserDataStore.add_totp_user(user_id=body['user_id'], secret=self.secret, verified=False)
         else:
-            return {"message": "you are robot!"}
+            return make_response(render_template('robot.html'), 404, headers)
         secret = UserDataStore.check_user_totp(user_id=body['user_id']).secret
         totp = pyotp.TOTP(secret)
         code = request.form.get('code')

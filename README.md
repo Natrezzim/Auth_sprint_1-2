@@ -31,7 +31,8 @@ flask adm-cmd create-superuser "yourusername" "yourpassword"
 Flask доступен по адресу http://127.0.0.1:80/  
 Документация http://127.0.0.1:80/doc/     
 API http://127.0.0.1:80/api/v1/  
-Jaeger http://127.0.0.1:16686/
+Jaeger http://127.0.0.1:16686/  
+TOTP + Captcha http://127.0.0.1/api/v1/login/totp?user_id=
 
 Таблицы
 -
