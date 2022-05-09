@@ -80,7 +80,6 @@ class TokenDataStore:
         :param secret_key:
         :return:
         """
-        print(token)
         data = jwt.decode(jwt=token, key=secret_key, algorithms="HS256")
         return data
 

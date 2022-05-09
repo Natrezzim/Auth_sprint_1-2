@@ -32,7 +32,10 @@ class CheckAuthService(user_check_pb2_grpc.CheckAuthUserServicer, CheckAuthData)
 
     def GetAuthInfo(self, request, context):
         # Получаем данные пользователя
-        token_data = TokenDataStore.get_user_data_from_token(token=request.access_token, secret_key=SECRET_KEY)
+        try:
+            token_data = TokenDataStore.get_user_data_from_token(token=request.access_token, secret_key=SECRET_KEY)
+        except Exception as e:
+            context.abort(grpc.StatusCode.UNAUTHENTICATED, "access_token not valid")
         # Проверяем наличие пользователя в БД
         if self.check_available_user(token_data["user_id"]) is None:
             context.abort(grpc.StatusCode.UNAUTHENTICATED, "access_token not valid")

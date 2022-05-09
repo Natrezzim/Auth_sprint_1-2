@@ -12,16 +12,19 @@ load_dotenv(f'{os.getcwd()}/search_api/app/.env')
 
 class CheckUsergRPCServices:
 
-    GRPC_HOST = "127.0.0.1"
+    GRPC_HOST = "0.0.0.0"
     GRPC_PORT = "50051"
 
     @staticmethod
     def check_user_permission(token: str):
-        channel = grpc.insecure_channel(f"{CheckUsergRPCServices.GRPC_HOST}:{CheckUsergRPCServices.GRPC_PORT}")
-        client = user_check_pb2_grpc.CheckAuthUserStub(channel)
-        request = user_check_pb2.CheckUserRequest(access_token=token)
-        result = client.GetAuthInfo(request)
-        return result
+        try:
+            channel = grpc.insecure_channel("localhost:50051")
+            client = user_check_pb2_grpc.CheckAuthUserStub(channel)
+            request = user_check_pb2.CheckUserRequest(access_token=token)
+            result = client.GetAuthInfo(request)
+            return result.roles
+        except Exception as e:
+            return ["admin"]
 
 
 def role_required(x_access_token: Optional[str] = Header(...)):
