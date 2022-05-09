@@ -6,12 +6,12 @@ import pyotp
 from flask import Blueprint, jsonify, request, make_response, redirect, render_template
 from flask_restx import Namespace, Resource, fields, reqparse
 
-from src.app.miscellaneous.xcaptcha_config import xcaptcha
 from src.data.check_user import CheckAuthUser
 from src.data.datastore.roles_datastore import RolesCRUD
 from src.data.datastore.token_datastore import TokenDataStore
 from src.data.datastore.user_datastore import UserDataStore
-from src.data.db.db_models import Tokens, UserRole, Users
+from src.data.db.db_models import Tokens, Users
+from src.rest.miscellaneous.xcaptcha_config import xcaptcha
 from src.rest.utils.pagination import get_paginated_list
 
 auth = Blueprint('auth', __name__)

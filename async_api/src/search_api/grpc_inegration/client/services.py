@@ -1,11 +1,13 @@
+
 import grpc
 from search_api.grpc_inegration.protobufs import user_check_pb2_grpc, user_check_pb2
 import os
-from functools import wraps
-from fastapi import HTTPException, Header
+from fastapi import Header
 from http import HTTPStatus
 from typing import Optional
+from dotenv import load_dotenv
 
+load_dotenv(f'{os.getcwd()}/search_api/app/.env')
 
 class CheckUsergRPCServices:
 

@@ -4,7 +4,7 @@ import os
 
 from flask import Flask, request, jsonify
 
-from src.app.db.redis import redis_conn
+from src.data.db.redis import redis_conn
 
 
 def init_rate_limit(app: Flask):

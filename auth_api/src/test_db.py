@@ -1,14 +1,11 @@
 import os
 from contextlib import contextmanager
 
-from dotenv import load_dotenv
-from flask import Flask
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.data.db.db_models import Users, UserRole, Role
-from src.data.datastore.token_datastore import TokenDataStore
+
+from data.datastore.token_datastore import TokenDataStore
+from data.db.db_models import Users
 
 token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiOTk1MmE2M2QtMDEwNy00Y2NmLTg4N2QtZTc3NzUxOGVjZDcwIiwidXNlcm5hbWUiOiJ0ZXN0IiwicGFzc3dvcmQiOiJ0ZXN0MTIzIiwiZXhwaXJlcyI6IjIwMjItMDUtMDdUMTc6MzE6NTIiLCJ0eXBlIjoiYWNjZXNzIiwiaXNfYWRtaW5pc3RyYXRvciI6ZmFsc2V9.CvakkJX3ZMqLl7AXNx98pnGZF00ZahoEu4IWAdQpl20'
 SECRET_KEY='t1NP63m4wnBg6nyHYKfmc2TpCOGI4nss'

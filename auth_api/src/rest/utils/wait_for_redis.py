@@ -1,8 +1,12 @@
-import os
 
+import os
+from pathlib import Path
 import redis
 import logging
 import backoff
+from dotenv import load_dotenv
+
+load_dotenv(f"{Path(os.getcwd())}/config/.env")
 
 logging.getLogger('backoff').addHandler(logging.StreamHandler())
 

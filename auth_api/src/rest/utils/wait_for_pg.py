@@ -6,8 +6,7 @@ import backoff
 import psycopg2
 from dotenv import load_dotenv
 
-load_dotenv(f"{Path(os.getcwd())}/src/config/.env")
-print(f"TESTTEST", os.getenv('POSTGRES_DB'))
+load_dotenv(f"{Path(os.getcwd())}/config/.env")
 
 logging.getLogger('backoff').addHandler(logging.StreamHandler())
 
