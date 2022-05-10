@@ -6,8 +6,7 @@ from src.data.db.db_models import Users, UserRole, Role
 from src.data.datastore.token_datastore import TokenDataStore
 from src.grpc_api.protobuf.user_check_pb2 import CheckUser
 from src.grpc_api.protobuf import user_check_pb2_grpc
-SECRET_KEY='t1NP63m4wnBg6nyHYKfmc2TpCOGI4nss'
-# SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 import datetime
 
 LOGGER = logging.getLogger(__name__)
@@ -41,8 +40,8 @@ class CheckAuthService(user_check_pb2_grpc.CheckAuthUserServicer, CheckAuthData)
             context.abort(grpc.StatusCode.UNAUTHENTICATED, "access_token not valid")
         else:
             # Проверяем время жизни токена
-            # if not self.check_token_expired(exp=token_data["expires"]):
-            #     context.abort(grpc.StatusCode.UNAUTHENTICATED, "expired token")
+            if not self.check_token_expired(exp=token_data["expires"]):
+                context.abort(grpc.StatusCode.UNAUTHENTICATED, "expired token")
             with session_db() as s:
                 records = s.query(UserRole, Role).filter(
                     UserRole.user_id == token_data["user_id"],
