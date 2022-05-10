@@ -26,7 +26,6 @@ def init_db(app: Flask):
 
 @contextmanager
 def session_db():
-    print(os.getenv("POSTGRES_USER"))
     engine = create_engine(f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@"
                            f"{os.getenv('POSTGRES_HOST')}/{os.getenv('POSTGRES_DB')}")
     Session = sessionmaker(bind=engine)

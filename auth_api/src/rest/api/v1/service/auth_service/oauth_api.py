@@ -29,8 +29,6 @@ class AuthorizationYandex(Resource):
         response = oauth.yandex.get('https://login.yandex.ru/info')
         response.raise_for_status()
         profile = response.json()
-        print(token)
-        print(profile)
         user = UserDataStore.find_user_social_acc(social_id=profile['id'], social_name='yandex',
                                                   username=profile['login'])
         if not user:
