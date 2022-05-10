@@ -1,11 +1,17 @@
 import os
+from enum import Enum
 
 from authlib.integrations.flask_client import OAuth
 from flask import Flask
 
 oauth = OAuth()
 
-oauth.register(name='yandex')
+
+class ProvidersOauth(Enum):
+    YANDEX = 'yandex'
+
+
+oauth.register(name=ProvidersOauth.YANDEX)
 
 
 def init_oauth(app: Flask):
