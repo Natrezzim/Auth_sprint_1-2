@@ -25,8 +25,8 @@ services:
       sh -c "python src/grpc_api/main.py"
     env_file:
       - ./src/config/.env
-    ports:
-      - "50051:50051"
+    expose:
+      - "50051"
     depends_on:
       - db
       - service

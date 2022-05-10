@@ -22,6 +22,3 @@ COPY ./data ./src/data
 COPY ./grpc_api ./src/grpc_api
 RUN python -m grpc_tools.protoc -I ./src/grpc_api/protobuf --python_out=. \
            --grpc_python_out=. ./src/grpc_api/protobuf/user_check.proto
-EXPOSE 50051
-
-# ENTRYPOINT [ "python", "src/grpc/main.py" ]
