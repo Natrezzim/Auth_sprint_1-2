@@ -23,4 +23,3 @@ token_data = TokenDataStore.get_user_data_from_token(token=token, secret_key=SEC
 
 with session_db() as s:
     check_user = s.query(Users).filter_by(id=token_data['user_id']).one_or_none()
-    print(check_user)
